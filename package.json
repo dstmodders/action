@@ -1,0 +1,42 @@
+{
+  "name": "github-action",
+  "description": "GitHub Action for Depressed DST Modders.",
+  "version": "0.0.0",
+  "author": {
+    "name": "Depressed DST Modders",
+    "email": "hello@dstmodders.com"
+  },
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/exec": "^1.1.0",
+    "@actions/github": "^5.0.0",
+    "@slack/bolt": "^3.8.1"
+  },
+  "devDependencies": {
+    "prettier": "^2.4.1",
+    "typescript": "^4.4.4",
+    "yarn-audit-fix": "^7.2.0",
+    "yarn-deduplicate": "^3.1.0"
+  },
+  "homepage": "https://github.com/dstmodders/github-action#readme",
+  "keywords": [
+    "github-action",
+    "klei-tools",
+    "ktools",
+    "luacheck",
+    "prettier"
+  ],
+  "license": "MIT",
+  "main": "lib/main.js",
+  "repository": {
+    "type": "git",
+    "url": "github:dstmodders/github-action"
+  },
+  "scripts": {
+    "audit:fix": "yarn-audit-fix",
+    "build": "tsc",
+    "deduplicate": "yarn-deduplicate && yarn install --ignore-scripts",
+    "lint": "prettier --check .",
+    "prepare": "npm run build"
+  }
+}
