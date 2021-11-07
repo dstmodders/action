@@ -1,0 +1,8 @@
+### Intellij ###
+.idea/
+
+### NodeJS ###
+node_modules/
+
+### Project ###
+lib/
