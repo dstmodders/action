@@ -1,0 +1,42 @@
+name: 'Depressed DST Modders GitHub Action'
+description: "Run different modding tools for Don't Starve Together game"
+author: 'Depressed DST Modders'
+inputs:
+  luacheck:
+    default: 'false'
+    description: 'Run Luacheck'
+    required: false
+  prettier:
+    default: 'false'
+    description: 'Run Prettier'
+    required: false
+  slack:
+    default: 'false'
+    description: 'Enable Slack notification'
+    required: false
+  slack-color-default:
+    default: '#dcad04' # '#1f242b'
+    description: 'Default color for Slack attachment'
+    required: false
+  slack-color-failure:
+    default: '#cc1f2d'
+    description: 'Failure color for Slack attachment'
+    required: false
+  slack-color-success:
+    default: '#24a943'
+    description: 'Success color for Slack attachment'
+    required: false
+  slack-color-warning:
+    default: '#dcad04'
+    description: 'Warning color for Slack attachment'
+    required: false
+outputs:
+  luacheck-issues:
+    description: 'Number of issues found by Luacheck'
+  luacheck-output:
+    description: 'Luacheck output'
+  luacheck-version:
+    description: 'Luacheck version'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
