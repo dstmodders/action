@@ -76,10 +76,6 @@ async function run() {
     return;
   }
 
-  let issuesLuacheck: number = 0;
-  let issuesPrettier: number = 0;
-  let issuesStyLua: number = 0;
-
   try {
     await checkVersions();
 
@@ -88,23 +84,23 @@ async function run() {
     }
 
     if (inputLuacheck) {
-      issuesLuacheck = await luacheck.run();
+      slack.luacheckIssues = await luacheck.run();
     }
 
     if (inputPrettier) {
-      issuesPrettier = await prettier.run();
+      slack.prettierIssues = await prettier.run();
     }
 
     if (inputStyLua) {
-      issuesStyLua = await stylua.run();
+      slack.styLuaIssues = await stylua.run();
     }
 
     if (inputSlack) {
-      await slack.stop(issuesLuacheck, issuesPrettier, issuesStyLua);
+      await slack.stop();
     }
   } catch (error) {
     if (inputSlack) {
-      await slack.stop(issuesLuacheck, issuesPrettier, issuesStyLua);
+      await slack.stop();
     }
 
     if (error instanceof Error) {

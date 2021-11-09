@@ -22,11 +22,17 @@ interface SlackOptions {
 class Slack {
   private app: App;
 
-  private channelID: string;
+  public luacheckIssues: number;
 
   private options: SlackOptions;
 
   private timestamp: string;
+
+  private channelID: string;
+
+  public prettierIssues: number;
+
+  public styLuaIssues: number;
 
   private static getBranchName(): string {
     let branchName = github.context.ref;
@@ -78,7 +84,10 @@ class Slack {
 
   constructor(options: SlackOptions) {
     this.channelID = '';
+    this.luacheckIssues = 0;
     this.options = options;
+    this.prettierIssues = 0;
+    this.styLuaIssues = 0;
     this.timestamp = '';
 
     this.app = new App({
@@ -161,14 +170,14 @@ class Slack {
     return result;
   }
 
-  private async update(
-    issuesLuacheck: number,
-    issuesPrettier: number,
-    issuesStylua: number,
-  ) {
+  private async update() {
     let color = this.options.colors.success;
     let fields = Slack.getGeneralFields('Completed');
-    if (issuesLuacheck > 0 || issuesPrettier > 0 || issuesStylua > 0) {
+    if (
+      this.luacheckIssues > 0 ||
+      this.prettierIssues > 0 ||
+      this.styLuaIssues > 0
+    ) {
       color = this.options.colors.failure;
       fields = Slack.getGeneralFields('Failed');
     }
@@ -176,21 +185,21 @@ class Slack {
     if (this.options.run.luacheck) {
       fields.push({
         type: 'mrkdwn',
-        text: `*Luacheck issues*\n${issuesLuacheck}`,
+        text: `*Luacheck issues*\n${this.luacheckIssues}`,
       });
     }
 
     if (this.options.run.prettier) {
       fields.push({
         type: 'mrkdwn',
-        text: `*Prettier issues*\n${issuesPrettier}`,
+        text: `*Prettier issues*\n${this.prettierIssues}`,
       });
     }
 
     if (this.options.run.stylua) {
       fields.push({
         type: 'mrkdwn',
-        text: `*StyLua issues*\n${issuesStylua}`,
+        text: `*StyLua issues*\n${this.styLuaIssues}`,
       });
     }
 
@@ -235,13 +244,9 @@ class Slack {
     core.endGroup();
   }
 
-  public async stop(
-    issuesLuacheck: number,
-    issuesPrettier: number,
-    issuesStylua: number,
-  ): Promise<void> {
+  public async stop(): Promise<void> {
     core.startGroup('Stop Slack app');
-    await this.update(issuesLuacheck, issuesPrettier, issuesStylua);
+    await this.update();
     core.debug('Stopping Slack app...');
     await this.app.stop();
     core.debug('Slack app is stopped');
