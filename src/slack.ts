@@ -168,7 +168,7 @@ class Slack {
   ) {
     let color = this.options.colors.success;
     let fields = Slack.getGeneralFields('Completed');
-    if (issuesLuacheck > 0 || issuesPrettier > 0) {
+    if (issuesLuacheck > 0 || issuesPrettier > 0 || issuesStylua > 0) {
       color = this.options.colors.failure;
       fields = Slack.getGeneralFields('Failed');
     }
