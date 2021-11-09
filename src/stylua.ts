@@ -17,10 +17,14 @@ interface StyLuaLint {
 }
 
 async function getFiles(): Promise<string[]> {
-  const data: string = fs.readFileSync('.styluaignore', 'utf8');
-  const ignored: string[] = data.trim().split(/\r\n|\r|\n/);
-  const paths = glob.sync('**/*.lua');
-  return Promise.resolve(ignore().add(ignored).filter(paths));
+  const ignoreFile: string = '.styluaignore';
+  if (fs.existsSync(ignoreFile)) {
+    const data: string = fs.readFileSync(ignoreFile, 'utf8');
+    const ignored: string[] = data.trim().split(/\r\n|\r|\n/);
+    const paths = glob.sync('**/*.lua');
+    return Promise.resolve(ignore().add(ignored).filter(paths));
+  }
+  return Promise.resolve(glob.sync('**/*.lua'));
 }
 
 async function getVersion(): Promise<string> {
