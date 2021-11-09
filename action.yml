@@ -30,6 +30,10 @@ inputs:
     default: '#dcad04'
     description: 'Warning color for Slack attachment'
     required: false
+  stylua:
+    default: 'false'
+    description: 'Run StyLua'
+    required: false
 outputs:
   luacheck-issues:
     description: 'Number of issues found by Luacheck'

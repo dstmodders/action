@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import * as lua from './lua';
 import * as luacheck from './luacheck';
 import * as prettier from './prettier';
+import * as stylua from './stylua';
 import { Slack } from './slack';
 
 async function getEnv(
@@ -17,42 +18,36 @@ async function getEnv(
 }
 
 async function checkVersions(): Promise<void> {
-  let luaVersion: string = '';
-  let luacheckVersion: string = '';
-  let prettierVersion: string = '';
-
   core.startGroup('Check versions');
-  await lua.getVersion().then((version) => {
-    luaVersion = version;
-    core.info(`Lua: ${luaVersion}`);
-  });
+  const luaVersion: string = await lua.getVersion();
+  const luacheckVersion: string = await luacheck.getVersion();
+  const prettierVersion: string = await prettier.getVersion();
+  const styluaVersion: string = await stylua.getVersion();
 
-  await luacheck.getVersion().then((version) => {
-    luacheckVersion = version;
-    core.info(`Luacheck: ${luacheckVersion}`);
-  });
-
-  await prettier.getVersion().then((version) => {
-    prettierVersion = version;
-    core.info(`Prettier: ${prettierVersion}`);
-  });
+  core.info(`Lua: ${luaVersion}`);
+  core.info(`Luacheck: ${luacheckVersion}`);
+  core.info(`Prettier: ${prettierVersion}`);
+  core.info(`StyLua: ${styluaVersion}`);
 
   core.setOutput('lua-version', luaVersion);
   core.setOutput('luacheck-version', luacheckVersion);
   core.setOutput('prettier-version', prettierVersion);
+  core.setOutput('stylua-version', prettierVersion);
   core.endGroup();
 }
 
 async function run() {
   let slack: Slack | null = null;
-  let inputSlack: boolean = false;
   let inputLuacheck: boolean = false;
   let inputPrettier: boolean = false;
+  let inputSlack: boolean = false;
+  let inputStyLua: boolean = false;
 
   try {
-    inputSlack = core.getBooleanInput('slack');
     inputLuacheck = core.getBooleanInput('luacheck');
     inputPrettier = core.getBooleanInput('prettier');
+    inputSlack = core.getBooleanInput('slack');
+    inputStyLua = core.getBooleanInput('stylua');
 
     slack = new Slack({
       channel: await getEnv('SLACK_CHANNEL', true),
@@ -67,6 +62,7 @@ async function run() {
       run: {
         luacheck: inputLuacheck,
         prettier: inputPrettier,
+        stylua: inputStyLua,
       },
     });
   } catch (error) {
@@ -82,6 +78,7 @@ async function run() {
 
   let issuesLuacheck: number = 0;
   let issuesPrettier: number = 0;
+  let issuesStyLua: number = 0;
 
   try {
     await checkVersions();
@@ -98,12 +95,16 @@ async function run() {
       issuesPrettier = await prettier.run();
     }
 
+    if (inputStyLua) {
+      issuesStyLua = await stylua.run();
+    }
+
     if (inputSlack) {
-      await slack.stop(issuesLuacheck, issuesPrettier);
+      await slack.stop(issuesLuacheck, issuesPrettier, issuesStyLua);
     }
   } catch (error) {
     if (inputSlack) {
-      await slack.stop(issuesLuacheck, issuesPrettier);
+      await slack.stop(issuesLuacheck, issuesPrettier, issuesStyLua);
     }
 
     if (error instanceof Error) {

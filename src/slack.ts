@@ -15,6 +15,7 @@ interface SlackOptions {
   run: {
     luacheck: boolean;
     prettier: boolean;
+    stylua: boolean;
   };
 }
 
@@ -125,6 +126,13 @@ class Slack {
       });
     }
 
+    if (this.options.run.stylua) {
+      fields.push({
+        type: 'mrkdwn',
+        text: '*StyLua issues*\nChecking...',
+      });
+    }
+
     core.debug('Posting message...');
     const result = await this.app.client.chat.postMessage({
       channel: this.channelID,
@@ -153,7 +161,11 @@ class Slack {
     return result;
   }
 
-  private async update(issuesLuacheck: number, issuesPrettier: number) {
+  private async update(
+    issuesLuacheck: number,
+    issuesPrettier: number,
+    issuesStylua: number,
+  ) {
     let color = this.options.colors.success;
     let fields = Slack.getGeneralFields('Completed');
     if (issuesLuacheck > 0 || issuesPrettier > 0) {
@@ -172,6 +184,13 @@ class Slack {
       fields.push({
         type: 'mrkdwn',
         text: `*Prettier issues*\n${issuesPrettier}`,
+      });
+    }
+
+    if (this.options.run.stylua) {
+      fields.push({
+        type: 'mrkdwn',
+        text: `*StyLua issues*\n${issuesStylua}`,
       });
     }
 
@@ -219,9 +238,10 @@ class Slack {
   public async stop(
     issuesLuacheck: number,
     issuesPrettier: number,
+    issuesStylua: number,
   ): Promise<void> {
     core.startGroup('Stop Slack app');
-    await this.update(issuesLuacheck, issuesPrettier);
+    await this.update(issuesLuacheck, issuesPrettier, issuesStylua);
     core.debug('Stopping Slack app...');
     await this.app.stop();
     core.debug('Slack app is stopped');
