@@ -35,12 +35,31 @@ inputs:
     description: 'Run StyLua'
     required: false
 outputs:
+  lua-version:
+    description: 'Lua version'
+  luacheck-version:
+    description: 'Luacheck version'
+  prettier-version:
+    description: 'Prettier version'
+  stylua-version:
+    description: 'StyLua version'
+
   luacheck-issues:
     description: 'Number of issues found by Luacheck'
   luacheck-output:
     description: 'Luacheck output'
-  luacheck-version:
-    description: 'Luacheck version'
+
+  prettier-issues:
+    description: 'Number of issues found by Prettier'
+  prettier-output:
+    description: 'Prettier output'
+
+  stylua-total:
+    description: 'Number of files checked by StyLua'
+  stylua-failed:
+    description: 'Number of failed files by StyLua'
+  stylua-passed:
+    description: 'Number of passed files by StyLua'
 runs:
   using: 'docker'
   image: 'Dockerfile'
