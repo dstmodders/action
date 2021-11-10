@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
+import { StyLuaLint } from './stylua';
 
 interface SlackOptions {
   channel: string;
@@ -32,7 +33,7 @@ class Slack {
 
   public prettierIssues: number;
 
-  public styLuaIssues: number;
+  public styLuaLint: StyLuaLint;
 
   private static getBranchName(): string {
     let branchName = github.context.ref;
@@ -87,8 +88,14 @@ class Slack {
     this.luacheckIssues = 0;
     this.options = options;
     this.prettierIssues = 0;
-    this.styLuaIssues = 0;
     this.timestamp = '';
+
+    this.styLuaLint = <StyLuaLint>{
+      failed: 0,
+      files: [],
+      output: '',
+      passed: 0,
+    };
 
     this.app = new App({
       signingSecret: options.signingSecret,
@@ -119,7 +126,7 @@ class Slack {
   }
 
   private async post() {
-    const fields = Slack.getGeneralFields('In progress');
+    const fields: MrkdwnElement[] = Slack.getGeneralFields('In progress');
 
     if (this.options.run.luacheck) {
       fields.push({
@@ -138,7 +145,7 @@ class Slack {
     if (this.options.run.stylua) {
       fields.push({
         type: 'mrkdwn',
-        text: '*StyLua issues*\nChecking...',
+        text: '*StyLua passes*\nChecking...',
       });
     }
 
@@ -176,7 +183,7 @@ class Slack {
     if (
       this.luacheckIssues > 0 ||
       this.prettierIssues > 0 ||
-      this.styLuaIssues > 0
+      this.styLuaLint.failed > 0
     ) {
       color = this.options.colors.failure;
       fields = Slack.getGeneralFields('Failed');
@@ -199,7 +206,7 @@ class Slack {
     if (this.options.run.stylua) {
       fields.push({
         type: 'mrkdwn',
-        text: `*StyLua issues*\n${this.styLuaIssues}`,
+        text: `*StyLua passes*\n${this.styLuaLint.files.length} / ${this.styLuaLint.passed} files`,
       });
     }
 

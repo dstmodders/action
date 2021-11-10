@@ -92,16 +92,13 @@ async function lint(): Promise<StyLuaLint> {
   return result;
 }
 
-async function run(): Promise<number> {
-  let failed: number = 0;
-
+async function run(): Promise<StyLuaLint> {
   try {
     core.startGroup('Run StyLua');
     const result: StyLuaLint = await lint();
 
-    failed = result.failed;
-    if (failed > 0) {
-      core.info(`Failed: ${failed}. Passed: ${result.passed}.\n`);
+    if (result.failed > 0) {
+      core.info(`Failed: ${result.failed}. Passed: ${result.passed}.\n`);
 
       result.files.forEach((file) => {
         if (file.exitCode > 0) {
@@ -112,15 +109,16 @@ async function run(): Promise<number> {
       core.info('No issues found');
     }
 
-    core.setOutput('stylua-failed', failed);
+    core.setOutput('stylua-failed', result.failed);
     core.setOutput('stylua-passed', result.passed);
     core.setOutput('stylua-total', result.files.length);
     core.endGroup();
+    return Promise.resolve(result);
   } catch (error) {
     return Promise.reject(error);
   }
 
-  return failed;
+  return Promise.reject(new Error('An unexpected error'));
 }
 
 export { StyLuaLint, getVersion, lint, run };

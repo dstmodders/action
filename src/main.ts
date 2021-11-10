@@ -92,7 +92,7 @@ async function run() {
     }
 
     if (inputStyLua) {
-      slack.styLuaIssues = await stylua.run();
+      slack.styLuaLint = await stylua.run();
     }
 
     if (inputSlack) {
