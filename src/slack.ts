@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
+import { PrettierLint } from './prettier';
 import { StyLuaLint } from './stylua';
 
 interface SlackOptions {
@@ -31,7 +32,7 @@ class Slack {
 
   private channelID: string;
 
-  public prettierIssues: number;
+  public prettierLint: PrettierLint;
 
   public styLuaLint: StyLuaLint;
 
@@ -87,8 +88,14 @@ class Slack {
     this.channelID = '';
     this.luacheckIssues = 0;
     this.options = options;
-    this.prettierIssues = 0;
     this.timestamp = '';
+
+    this.prettierLint = <PrettierLint>{
+      failed: 0,
+      files: [],
+      output: '',
+      passed: 0,
+    };
 
     this.styLuaLint = <StyLuaLint>{
       failed: 0,
@@ -182,7 +189,7 @@ class Slack {
     let fields = Slack.getGeneralFields('Completed');
     if (
       this.luacheckIssues > 0 ||
-      this.prettierIssues > 0 ||
+      this.prettierLint.failed > 0 ||
       this.styLuaLint.failed > 0
     ) {
       color = this.options.colors.failure;
@@ -199,14 +206,14 @@ class Slack {
     if (this.options.run.prettier) {
       fields.push({
         type: 'mrkdwn',
-        text: `*Prettier issues*\n${this.prettierIssues}`,
+        text: `*Prettier passes*\n${this.prettierLint.passed} / ${this.prettierLint.files.length} files`,
       });
     }
 
     if (this.options.run.stylua) {
       fields.push({
         type: 'mrkdwn',
-        text: `*StyLua passes*\n${this.styLuaLint.files.length} / ${this.styLuaLint.passed} files`,
+        text: `*StyLua passes*\n${this.styLuaLint.passed} / ${this.styLuaLint.files.length} files`,
       });
     }
 

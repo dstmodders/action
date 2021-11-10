@@ -88,7 +88,7 @@ async function run() {
     }
 
     if (inputPrettier) {
-      slack.prettierIssues = await prettier.run();
+      slack.prettierLint = await prettier.run();
     }
 
     if (inputStyLua) {
