@@ -112,21 +112,20 @@ async function run(): Promise<LuacheckLint> {
         }:\n`,
       );
       core.info(result.output);
+
+      // eslint-disable-next-line no-restricted-syntax
+      for (const annotation of result.annotations) {
+        core.warning(annotation.message, {
+          ...annotation.properties,
+          title: 'Luacheck',
+        });
+      }
     } else {
       core.info('No issues found');
     }
 
     core.setOutput('luacheck-issues', result.issues);
     core.setOutput('luacheck-output', result.output);
-
-    // eslint-disable-next-line no-restricted-syntax
-    for (const annotation of result.annotations) {
-      core.warning(annotation.message, {
-        ...annotation.properties,
-        title: 'Luacheck',
-      });
-    }
-
     core.endGroup();
     return Promise.resolve(result);
   } catch (error) {
