@@ -80,6 +80,7 @@ async function lint(): Promise<StyLuaLint> {
         result.passed += 1;
       } else {
         result.failed += 1;
+        result.output += `${file}\n`;
       }
 
       result.files.push({
@@ -87,6 +88,8 @@ async function lint(): Promise<StyLuaLint> {
         exitCode,
       });
     }
+
+    result.output = result.output.trim();
   } catch (error) {
     return Promise.reject(error);
   }
@@ -101,12 +104,7 @@ async function run(): Promise<StyLuaLint> {
 
     if (result.failed > 0) {
       core.info(`Failed: ${result.failed}. Passed: ${result.passed}.\n`);
-
-      result.files.forEach((file) => {
-        if (file.exitCode > 0) {
-          core.info(file.path);
-        }
-      });
+      core.info(result.output);
     } else {
       core.info('No issues found');
     }
@@ -114,6 +112,7 @@ async function run(): Promise<StyLuaLint> {
     core.setOutput('stylua-failed', result.failed);
     core.setOutput('stylua-passed', result.passed);
     core.setOutput('stylua-total', result.files.length);
+    core.setOutput('stylua-output', result.output);
     core.endGroup();
     return Promise.resolve(result);
   } catch (error) {
