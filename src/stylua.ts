@@ -64,7 +64,9 @@ async function lint(): Promise<StyLuaLint> {
     const files = await getFiles();
     let exitCode: number = 0;
 
-    core.info(`Checking ${files.length} files...`);
+    core.info(
+      `Checking ${files.length} file${files.length === 1 ? '' : 's'}...`,
+    );
 
     // eslint-disable-next-line no-restricted-syntax
     for (const file of files) {
@@ -117,8 +119,6 @@ async function run(): Promise<StyLuaLint> {
   } catch (error) {
     return Promise.reject(error);
   }
-
-  return Promise.reject(new Error('An unexpected error'));
 }
 
-export { StyLuaLint, getVersion, lint, run };
+export { StyLuaLint, StyLuaLintFile, getVersion, lint, run };
