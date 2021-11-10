@@ -49,17 +49,23 @@ outputs:
   luacheck-output:
     description: 'Luacheck output'
 
-  prettier-issues:
-    description: 'Number of issues found by Prettier'
+  prettier-total:
+    description: 'Number of total files checked by Prettier'
+  prettier-failed:
+    description: 'Number of failed files by Prettier'
+  prettier-passed:
+    description: 'Number of passed files by Prettier'
   prettier-output:
-    description: 'Prettier output'
+    description: 'The list of all failed files by Prettier'
 
   stylua-total:
-    description: 'Number of files checked by StyLua'
+    description: 'Number of total files checked by StyLua'
   stylua-failed:
     description: 'Number of failed files by StyLua'
   stylua-passed:
     description: 'Number of passed files by StyLua'
+  stylua-output:
+    description: 'The list of all failed files by StyLua'
 runs:
   using: 'docker'
   image: 'Dockerfile'
