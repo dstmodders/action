@@ -67,6 +67,7 @@ async function lint(): Promise<PrettierLint> {
     output: '',
     passed: 0,
   };
+  result.annotations.pop();
 
   try {
     const files = await getFiles();
