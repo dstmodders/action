@@ -1,7 +1,14 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import { AnnotationProperties } from '@actions/core';
+
+interface LuacheckLintAnnotation {
+  message: string;
+  properties: AnnotationProperties;
+}
 
 interface LuacheckLint {
+  annotations: [LuacheckLintAnnotation];
   output: string;
   issues: number;
 }
@@ -34,12 +41,14 @@ async function getVersion(): Promise<string> {
 
 async function lint(): Promise<LuacheckLint> {
   const result: LuacheckLint = {
+    annotations: [<LuacheckLintAnnotation>{}],
     output: '',
     issues: 0,
   };
+  result.annotations.pop();
 
   try {
-    let issues: number = 0;
+    let lines: string[] = [];
     let output: string = '';
 
     await exec
@@ -56,11 +65,34 @@ async function lint(): Promise<LuacheckLint> {
       })
       .catch(() => {
         core.debug('Non-zero exit code');
-        issues = output.trim().split(/\r\n|\r|\n/).length;
+        lines = output.trim().split(/\r\n|\r|\n/);
       });
 
+    let matches: RegExpMatchArray | null = [];
+    // eslint-disable-next-line no-restricted-syntax
+    for (const line of lines) {
+      matches = line.match(/(.*):(\d*):(\d*): (.*)/i);
+      if (matches) {
+        const [, file, startLine, startColumn, message] = matches;
+        if (
+          file.length > 0 &&
+          startLine.length > 0 &&
+          startColumn.length > 0 &&
+          message.length > 0
+        )
+          result.annotations.push({
+            properties: <AnnotationProperties>{
+              startLine: Number(startLine),
+              startColumn: Number(startColumn),
+              file,
+            },
+            message,
+          });
+      }
+    }
+
+    result.issues = lines.length;
     result.output = output.trim();
-    result.issues = issues;
   } catch (error) {
     return Promise.reject(error);
   }
@@ -85,8 +117,17 @@ async function run(): Promise<number> {
       core.info('No issues found');
     }
 
-    core.setOutput('luacheck-output', result.output);
     core.setOutput('luacheck-issues', issues);
+    core.setOutput('luacheck-output', result.output);
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const annotation of result.annotations) {
+      core.warning(annotation.message, {
+        ...annotation.properties,
+        title: 'Luacheck',
+      });
+    }
+
     core.endGroup();
   } catch (error) {
     return Promise.reject(error);
