@@ -88,6 +88,7 @@ async function lint(): Promise<PrettierLint> {
         result.passed += 1;
       } else {
         result.failed += 1;
+        result.output += `${file}\n`;
         result.annotations.push({
           message: 'Code style issues found',
           properties: <AnnotationProperties>{
@@ -101,6 +102,8 @@ async function lint(): Promise<PrettierLint> {
         exitCode,
       });
     }
+
+    result.output = result.output.trim();
   } catch (error) {
     return Promise.reject(error);
   }
@@ -115,12 +118,7 @@ async function run(): Promise<PrettierLint> {
 
     if (result.failed > 0) {
       core.info(`Failed: ${result.failed}. Passed: ${result.passed}.\n`);
-
-      result.files.forEach((file) => {
-        if (file.exitCode > 0) {
-          core.info(file.path);
-        }
-      });
+      core.info(result.output);
 
       // eslint-disable-next-line no-restricted-syntax
       for (const annotation of result.annotations) {
@@ -136,6 +134,7 @@ async function run(): Promise<PrettierLint> {
     core.setOutput('prettier-failed', result.failed);
     core.setOutput('prettier-passed', result.passed);
     core.setOutput('prettier-total', result.files.length);
+    core.setOutput('prettier-output', result.output);
     core.endGroup();
     return Promise.resolve(result);
   } catch (error) {
