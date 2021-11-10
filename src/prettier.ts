@@ -1,8 +1,14 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import { AnnotationProperties } from '@actions/core';
 import fs from 'fs';
 import glob from 'glob';
 import ignore from 'ignore';
+
+interface PrettierLintAnnotation {
+  message: string;
+  properties: AnnotationProperties;
+}
 
 interface PrettierLintFile {
   path: string;
@@ -10,6 +16,7 @@ interface PrettierLintFile {
 }
 
 interface PrettierLint {
+  annotations: [PrettierLintAnnotation];
   failed: number;
   files: PrettierLintFile[];
   output: string;
@@ -54,6 +61,7 @@ async function getVersion(): Promise<string> {
 
 async function lint(): Promise<PrettierLint> {
   const result: PrettierLint = {
+    annotations: [<PrettierLintAnnotation>{}],
     failed: 0,
     files: [],
     output: '',
@@ -80,6 +88,12 @@ async function lint(): Promise<PrettierLint> {
         result.passed += 1;
       } else {
         result.failed += 1;
+        result.annotations.push({
+          message: 'Code style issues found',
+          properties: <AnnotationProperties>{
+            file,
+          },
+        });
       }
 
       result.files.push({
@@ -107,6 +121,14 @@ async function run(): Promise<PrettierLint> {
           core.info(file.path);
         }
       });
+
+      // eslint-disable-next-line no-restricted-syntax
+      for (const annotation of result.annotations) {
+        core.warning(annotation.message, {
+          ...annotation.properties,
+          title: 'Prettier',
+        });
+      }
     } else {
       core.info('No issues found');
     }
@@ -121,4 +143,11 @@ async function run(): Promise<PrettierLint> {
   }
 }
 
-export { PrettierLint, PrettierLintFile, getVersion, lint, run };
+export {
+  PrettierLint,
+  PrettierLintAnnotation,
+  PrettierLintFile,
+  getVersion,
+  lint,
+  run,
+};

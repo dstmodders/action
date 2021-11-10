@@ -1,9 +1,9 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
-import { PrettierLint } from './prettier';
-import { StyLuaLint } from './stylua';
 import { LuacheckLint, LuacheckLintAnnotation } from './luacheck';
+import { PrettierLint, PrettierLintAnnotation } from './prettier';
+import { StyLuaLint } from './stylua';
 
 interface SlackOptions {
   channel: string;
@@ -97,6 +97,7 @@ class Slack {
     };
 
     this.prettierLint = <PrettierLint>{
+      annotations: [<PrettierLintAnnotation>{}],
       failed: 0,
       files: [],
       output: '',
