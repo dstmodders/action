@@ -84,7 +84,7 @@ async function run() {
     }
 
     if (inputLuacheck) {
-      slack.luacheckIssues = await luacheck.run();
+      slack.luacheckLint = await luacheck.run();
     }
 
     if (inputPrettier) {

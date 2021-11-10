@@ -100,24 +100,23 @@ async function lint(): Promise<LuacheckLint> {
   return result;
 }
 
-async function run(): Promise<number> {
-  let issues: number = 0;
-
+async function run(): Promise<LuacheckLint> {
   try {
     core.startGroup('Run Luacheck');
     const result: LuacheckLint = await lint();
 
-    issues = result.issues;
-    if (issues > 0) {
+    if (result.issues > 0) {
       core.info(
-        `Found ${issues} issue${issues === 0 || issues > 1 ? 's' : ''}:\n`,
+        `Found ${result.issues} issue${
+          result.issues === 0 || result.issues > 1 ? 's' : ''
+        }:\n`,
       );
       core.info(result.output);
     } else {
       core.info('No issues found');
     }
 
-    core.setOutput('luacheck-issues', issues);
+    core.setOutput('luacheck-issues', result.issues);
     core.setOutput('luacheck-output', result.output);
 
     // eslint-disable-next-line no-restricted-syntax
@@ -129,11 +128,10 @@ async function run(): Promise<number> {
     }
 
     core.endGroup();
+    return Promise.resolve(result);
   } catch (error) {
     return Promise.reject(error);
   }
-
-  return issues;
 }
 
-export { LuacheckLint, getVersion, lint, run };
+export { LuacheckLint, LuacheckLintAnnotation, getVersion, lint, run };

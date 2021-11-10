@@ -3,6 +3,7 @@ import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
 import { PrettierLint } from './prettier';
 import { StyLuaLint } from './stylua';
+import { LuacheckLint, LuacheckLintAnnotation } from './luacheck';
 
 interface SlackOptions {
   channel: string;
@@ -24,13 +25,13 @@ interface SlackOptions {
 class Slack {
   private app: App;
 
-  public luacheckIssues: number;
-
   private options: SlackOptions;
 
   private timestamp: string;
 
   private channelID: string;
+
+  public luacheckLint: LuacheckLint;
 
   public prettierLint: PrettierLint;
 
@@ -86,9 +87,14 @@ class Slack {
 
   constructor(options: SlackOptions) {
     this.channelID = '';
-    this.luacheckIssues = 0;
     this.options = options;
     this.timestamp = '';
+
+    this.luacheckLint = <LuacheckLint>{
+      annotations: [<LuacheckLintAnnotation>{}],
+      output: '',
+      issues: 0,
+    };
 
     this.prettierLint = <PrettierLint>{
       failed: 0,
@@ -188,7 +194,7 @@ class Slack {
     let color = this.options.colors.success;
     let fields = Slack.getGeneralFields('Completed');
     if (
-      this.luacheckIssues > 0 ||
+      this.luacheckLint.issues > 0 ||
       this.prettierLint.failed > 0 ||
       this.styLuaLint.failed > 0
     ) {
@@ -199,7 +205,7 @@ class Slack {
     if (this.options.run.luacheck) {
       fields.push({
         type: 'mrkdwn',
-        text: `*Luacheck issues*\n${this.luacheckIssues}`,
+        text: `*Luacheck issues*\n${this.luacheckLint.issues}`,
       });
     }
 
