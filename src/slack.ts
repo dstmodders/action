@@ -3,7 +3,7 @@ import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
 import { LuacheckLint, LuacheckLintAnnotation } from './luacheck';
 import { PrettierLint, PrettierLintAnnotation } from './prettier';
-import { StyLuaLint } from './stylua';
+import { StyLuaLint, StyLuaLintAnnotation } from './stylua';
 
 interface SlackOptions {
   channel: string;
@@ -105,6 +105,7 @@ class Slack {
     };
 
     this.styLuaLint = <StyLuaLint>{
+      annotations: [<StyLuaLintAnnotation>{}],
       failed: 0,
       files: [],
       output: '',

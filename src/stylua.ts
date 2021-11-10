@@ -1,8 +1,14 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import { AnnotationProperties } from '@actions/core';
 import fs from 'fs';
 import glob from 'glob';
 import ignore from 'ignore';
+
+interface StyLuaLintAnnotation {
+  message: string;
+  properties: AnnotationProperties;
+}
 
 interface StyLuaLintFile {
   path: string;
@@ -10,6 +16,7 @@ interface StyLuaLintFile {
 }
 
 interface StyLuaLint {
+  annotations: [StyLuaLintAnnotation];
   failed: number;
   files: StyLuaLintFile[];
   output: string;
@@ -54,11 +61,13 @@ async function getVersion(): Promise<string> {
 
 async function lint(): Promise<StyLuaLint> {
   const result: StyLuaLint = {
+    annotations: [<StyLuaLintAnnotation>{}],
     failed: 0,
     files: [],
     output: '',
     passed: 0,
   };
+  result.annotations.pop();
 
   try {
     const files = await getFiles();
@@ -81,6 +90,12 @@ async function lint(): Promise<StyLuaLint> {
       } else {
         result.failed += 1;
         result.output += `${file}\n`;
+        result.annotations.push({
+          message: 'Code style issues found',
+          properties: <AnnotationProperties>{
+            file,
+          },
+        });
       }
 
       result.files.push({
@@ -105,6 +120,14 @@ async function run(): Promise<StyLuaLint> {
     if (result.failed > 0) {
       core.info(`Failed: ${result.failed}. Passed: ${result.passed}.\n`);
       core.info(result.output);
+
+      // eslint-disable-next-line no-restricted-syntax
+      for (const annotation of result.annotations) {
+        core.warning(annotation.message, {
+          ...annotation.properties,
+          title: 'StyLua',
+        });
+      }
     } else {
       core.info('No issues found');
     }
@@ -120,4 +143,11 @@ async function run(): Promise<StyLuaLint> {
   }
 }
 
-export { StyLuaLint, StyLuaLintFile, getVersion, lint, run };
+export {
+  StyLuaLint,
+  StyLuaLintAnnotation,
+  StyLuaLintFile,
+  getVersion,
+  lint,
+  run,
+};
