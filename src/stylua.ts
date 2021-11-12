@@ -4,6 +4,7 @@ import fs from 'fs';
 import glob from 'glob';
 import ignore from 'ignore';
 import { AnnotationProperties } from '@actions/core';
+import { DiffEntry, compare } from './diff';
 
 interface StyLuaLintAnnotation {
   message: string;
@@ -88,6 +89,20 @@ async function lint(): Promise<StyLuaLint> {
       if (exitCode === 0) {
         result.passed += 1;
       } else {
+        const original: string = fs.readFileSync(file, 'utf8');
+        let changed: string = '';
+
+        // eslint-disable-next-line no-await-in-loop
+        await exec.exec(`/bin/bash -c "cat ${file} | stylua -"`, [], {
+          ignoreReturnCode: true,
+          silent: true,
+          listeners: {
+            stdout: (data: Buffer) => {
+              changed += data.toString();
+            },
+          },
+        });
+
         result.failed += 1;
         result.output += `${file}\n`;
         result.annotations.push({
@@ -95,6 +110,21 @@ async function lint(): Promise<StyLuaLint> {
           properties: <AnnotationProperties>{
             file,
           },
+        });
+
+        // eslint-disable-next-line no-await-in-loop
+        const diffEntries: DiffEntry[] = await compare(original, changed);
+
+        diffEntries.forEach((entry) => {
+          if (entry.line > 0 && entry.newValue.length > 0) {
+            result.annotations.push({
+              message: entry.newValue,
+              properties: <AnnotationProperties>{
+                startLine: entry.line,
+                file,
+              },
+            });
+          }
         });
       }
 
