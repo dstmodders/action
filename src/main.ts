@@ -1,9 +1,12 @@
 import * as core from '@actions/core';
-import * as lua from './lua';
 import * as luacheck from './luacheck';
 import * as prettier from './prettier';
 import * as stylua from './stylua';
+import * as versions from './versions';
+import { LuacheckLint } from './luacheck';
+import { PrettierLint } from './prettier';
 import { Slack } from './slack';
+import { StyLuaLint } from './stylua';
 
 async function getEnv(
   name: string,
@@ -17,22 +20,28 @@ async function getEnv(
   return result;
 }
 
-async function checkVersions(): Promise<void> {
+async function checkVersions(): Promise<versions.Versions> {
   core.startGroup('Check versions');
-  const luaVersion: string = await lua.getVersion();
-  const luacheckVersion: string = await luacheck.getVersion();
-  const prettierVersion: string = await prettier.getVersion();
-  const styluaVersion: string = await stylua.getVersion();
+  const v: versions.Versions = await versions.get();
+  core.info(`Lua: ${v.lua}`);
+  core.info(`Luacheck: ${v.luacheck}`);
+  core.info(`Prettier: ${v.prettier}`);
+  core.info(`StyLua: ${v.stylua}`);
+  core.endGroup();
+  return Promise.resolve(v);
+}
 
-  core.info(`Lua: ${luaVersion}`);
-  core.info(`Luacheck: ${luacheckVersion}`);
-  core.info(`Prettier: ${prettierVersion}`);
-  core.info(`StyLua: ${styluaVersion}`);
-
-  core.setOutput('lua-version', luaVersion);
-  core.setOutput('luacheck-version', luacheckVersion);
-  core.setOutput('prettier-version', prettierVersion);
-  core.setOutput('stylua-version', prettierVersion);
+async function setOutput(
+  v: versions.Versions,
+  luacheckLint: LuacheckLint,
+  prettierLint: PrettierLint,
+  styLuaLint: StyLuaLint,
+): Promise<void> {
+  core.startGroup('Set output');
+  await versions.setOutput(v);
+  await luacheck.setOutput(luacheckLint);
+  await prettier.setOutput(prettierLint);
+  await stylua.setOutput(styLuaLint);
   core.endGroup();
 }
 
@@ -77,7 +86,7 @@ async function run() {
   }
 
   try {
-    await checkVersions();
+    const v: versions.Versions = await checkVersions();
 
     if (inputSlack) {
       await slack.start();
@@ -98,6 +107,13 @@ async function run() {
     if (inputSlack) {
       await slack.stop();
     }
+
+    await setOutput(
+      v,
+      slack.luacheckLint,
+      slack.prettierLint,
+      slack.styLuaLint,
+    );
   } catch (error) {
     if (inputSlack) {
       await slack.stop();

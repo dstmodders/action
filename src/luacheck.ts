@@ -124,8 +124,6 @@ async function run(): Promise<LuacheckLint> {
       core.info('No issues found');
     }
 
-    core.setOutput('luacheck-issues', result.issues);
-    core.setOutput('luacheck-output', result.output);
     core.endGroup();
     return Promise.resolve(result);
   } catch (error) {
@@ -133,4 +131,16 @@ async function run(): Promise<LuacheckLint> {
   }
 }
 
-export { LuacheckLint, LuacheckLintAnnotation, getVersion, lint, run };
+async function setOutput(l: LuacheckLint): Promise<void> {
+  core.setOutput('luacheck-issues', l.issues);
+  core.setOutput('luacheck-output', l.output);
+}
+
+export {
+  LuacheckLint,
+  LuacheckLintAnnotation,
+  getVersion,
+  lint,
+  run,
+  setOutput,
+};

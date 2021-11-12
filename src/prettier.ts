@@ -132,15 +132,18 @@ async function run(): Promise<PrettierLint> {
       core.info('No issues found');
     }
 
-    core.setOutput('prettier-failed', result.failed);
-    core.setOutput('prettier-passed', result.passed);
-    core.setOutput('prettier-total', result.files.length);
-    core.setOutput('prettier-output', result.output);
     core.endGroup();
     return Promise.resolve(result);
   } catch (error) {
     return Promise.reject(error);
   }
+}
+
+async function setOutput(l: PrettierLint): Promise<void> {
+  core.setOutput('prettier-failed', l.failed);
+  core.setOutput('prettier-passed', l.passed);
+  core.setOutput('prettier-total', l.files.length);
+  core.setOutput('prettier-output', l.output);
 }
 
 export {
@@ -150,4 +153,5 @@ export {
   getVersion,
   lint,
   run,
+  setOutput,
 };

@@ -1,9 +1,9 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import { AnnotationProperties } from '@actions/core';
 import fs from 'fs';
 import glob from 'glob';
 import ignore from 'ignore';
+import { AnnotationProperties } from '@actions/core';
 
 interface StyLuaLintAnnotation {
   message: string;
@@ -132,15 +132,18 @@ async function run(): Promise<StyLuaLint> {
       core.info('No issues found');
     }
 
-    core.setOutput('stylua-failed', result.failed);
-    core.setOutput('stylua-passed', result.passed);
-    core.setOutput('stylua-total', result.files.length);
-    core.setOutput('stylua-output', result.output);
     core.endGroup();
     return Promise.resolve(result);
   } catch (error) {
     return Promise.reject(error);
   }
+}
+
+async function setOutput(l: StyLuaLint): Promise<void> {
+  core.setOutput('stylua-failed', l.failed);
+  core.setOutput('stylua-passed', l.passed);
+  core.setOutput('stylua-total', l.files.length);
+  core.setOutput('stylua-output', l.output);
 }
 
 export {
@@ -150,4 +153,5 @@ export {
   getVersion,
   lint,
   run,
+  setOutput,
 };
