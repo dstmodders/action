@@ -94,14 +94,17 @@ async function run() {
 
     if (inputLuacheck) {
       slack.luacheckLint = await luacheck.run();
+      await slack.update();
     }
 
     if (inputPrettier) {
       slack.prettierLint = await prettier.run();
+      await slack.update();
     }
 
     if (inputStyLua) {
       slack.styLuaLint = await stylua.run();
+      await slack.update();
     }
 
     if (inputSlack) {

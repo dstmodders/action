@@ -25,11 +25,13 @@ interface SlackOptions {
 class Slack {
   private app: App;
 
+  private channelID: string;
+
+  private inProgress: boolean;
+
   private options: SlackOptions;
 
   private timestamp: string;
-
-  private channelID: string;
 
   public luacheckLint: LuacheckLint;
 
@@ -89,6 +91,17 @@ class Slack {
     return `GitHub Actions <${jobUrl}|${workflow} / ${job}> job in ${this.getRepoText()} by <${actorUrl}|${actor}>`;
   }
 
+  private static getField(title: string, value: string): MrkdwnElement {
+    return {
+      type: 'mrkdwn',
+      text: `*${title}*\n${value}`,
+    };
+  }
+
+  private static getCheckingField(title: string): MrkdwnElement {
+    return this.getField(title, 'Checking...');
+  }
+
   private static getGeneralFields(status: string): MrkdwnElement[] {
     const { eventName, issue, serverUrl, sha } = github.context;
     const { owner, repo } = github.context.repo;
@@ -135,6 +148,7 @@ class Slack {
 
   constructor(options: SlackOptions) {
     this.channelID = '';
+    this.inProgress = false;
     this.options = options;
     this.timestamp = '';
 
@@ -192,24 +206,15 @@ class Slack {
     const fields: MrkdwnElement[] = Slack.getGeneralFields('In progress');
 
     if (this.options.run.luacheck) {
-      fields.push({
-        type: 'mrkdwn',
-        text: '*Luacheck issues*\nChecking...',
-      });
+      fields.push(Slack.getCheckingField('Luacheck issues'));
     }
 
     if (this.options.run.prettier) {
-      fields.push({
-        type: 'mrkdwn',
-        text: '*Prettier issues*\nChecking...',
-      });
+      fields.push(Slack.getCheckingField('Prettier issues'));
     }
 
     if (this.options.run.stylua) {
-      fields.push({
-        type: 'mrkdwn',
-        text: '*StyLua passes*\nChecking...',
-      });
+      fields.push(Slack.getCheckingField('StyLua issues'));
     }
 
     core.debug('Posting message...');
@@ -240,37 +245,54 @@ class Slack {
     return result;
   }
 
-  private async update() {
-    let color = this.options.colors.success;
-    let fields = Slack.getGeneralFields('Completed');
+  public async update() {
+    let color = this.options.colors.default;
+    let fields = Slack.getGeneralFields('In progress');
+
     if (
-      this.luacheckLint.issues > 0 ||
-      this.prettierLint.failed > 0 ||
-      this.styLuaLint.failed > 0
+      !this.inProgress &&
+      (this.luacheckLint.issues > 0 ||
+        this.prettierLint.failed > 0 ||
+        this.styLuaLint.failed > 0)
     ) {
       color = this.options.colors.failure;
       fields = Slack.getGeneralFields('Failed');
+    } else if (!this.inProgress) {
+      color = this.options.colors.success;
+      fields = Slack.getGeneralFields('Success');
     }
 
     if (this.options.run.luacheck) {
-      fields.push({
-        type: 'mrkdwn',
-        text: `*Luacheck issues*\n${this.luacheckLint.issues}`,
-      });
+      fields.push(
+        this.inProgress
+          ? Slack.getCheckingField('Luacheck issues')
+          : Slack.getField(
+              'Luacheck issues',
+              this.luacheckLint.issues.toString(),
+            ),
+      );
     }
 
     if (this.options.run.prettier) {
-      fields.push({
-        type: 'mrkdwn',
-        text: `*Prettier passes*\n${this.prettierLint.passed} / ${this.prettierLint.files.length} files`,
-      });
+      fields.push(
+        this.inProgress
+          ? Slack.getCheckingField('Prettier issues')
+          : Slack.getField(
+              'Prettier passes',
+              `${this.prettierLint.passed} / ${this.prettierLint.files.length} files`,
+            ),
+      );
     }
 
     if (this.options.run.stylua) {
-      fields.push({
-        type: 'mrkdwn',
-        text: `*StyLua passes*\n${this.styLuaLint.passed} / ${this.styLuaLint.files.length} files`,
-      });
+      fields.push(
+        this.inProgress
+          ? Slack.getCheckingField('StyLua issues')
+          : Slack.getField(
+              'StyLua passes',
+              `${this.styLuaLint.passed} / ${this.styLuaLint.files.length} files`,
+            ),
+      );
     }
 
     core.debug('Updating message...');
@@ -305,6 +327,7 @@ class Slack {
   public async start(): Promise<void> {
     core.startGroup('Run Slack app');
     core.debug('Starting Slack app...');
+    this.inProgress = true;
     await this.app.start(3000);
     core.debug('Slack app is running');
     await this.findChannel(this.options.channel);
@@ -316,8 +339,9 @@ class Slack {
 
   public async stop(): Promise<void> {
     core.startGroup('Stop Slack app');
-    await this.update();
     core.debug('Stopping Slack app...');
+    this.inProgress = false;
+    await this.update();
     await this.app.stop();
     core.debug('Slack app is stopped');
     core.endGroup();
