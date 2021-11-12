@@ -38,11 +38,44 @@ class Slack {
   public styLuaLint: StyLuaLint;
 
   private static getBranchName(): string {
-    let branchName = github.context.ref;
-    if (branchName.indexOf('refs/heads/') > -1) {
-      branchName = branchName.slice('refs/heads/'.length);
+    const { ref } = github.context;
+    if (ref.indexOf('refs/heads/') > -1) {
+      return ref.slice('refs/heads/'.length);
     }
-    return branchName;
+    return '';
+  }
+
+  private static getRepoText(): string {
+    const { eventName, issue, serverUrl } = github.context;
+    const { owner, repo } = github.context.repo;
+
+    const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
+
+    let branchName: string = '';
+    let result: string = '';
+    let url: string = '';
+
+    result = `<${repoUrl}|${owner}/${repo}>`;
+
+    switch (eventName) {
+      case 'pull_request':
+        if (issue.number > 0) {
+          url = `${repoUrl}/pull/${issue.number}`;
+          result = `${result}#<${url}|${issue.number}>`;
+        }
+        break;
+      case 'push':
+        branchName = this.getBranchName();
+        if (branchName.length > 0) {
+          url = `${repoUrl}/tree/${branchName}`;
+          result = `${result}@<${url}|${branchName}>`;
+        }
+        break;
+      default:
+        break;
+    }
+
+    return result;
   }
 
   private static getText(): string {
@@ -53,36 +86,51 @@ class Slack {
     const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
     const jobUrl: string = `${repoUrl}/actions/runs/${runId}`;
 
-    const branchName = this.getBranchName();
-
-    const branchUrl = `${repoUrl}/tree/${branchName}`;
-
-    return `GitHub Actions <${jobUrl}|${workflow} / ${job}> job in <${repoUrl}|${owner}/${repo}>@<${branchUrl}|${branchName}> by <${actorUrl}|${actor}>`;
+    return `GitHub Actions <${jobUrl}|${workflow} / ${job}> job in ${this.getRepoText()} by <${actorUrl}|${actor}>`;
   }
 
   private static getGeneralFields(status: string): MrkdwnElement[] {
-    const { owner } = github.context.repo;
-    const { serverUrl } = github.context;
-    const { sha } = github.context;
+    const { eventName, issue, serverUrl, sha } = github.context;
+    const { owner, repo } = github.context.repo;
 
-    const { repo } = github.context.repo;
     const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
-
     const commitUrl: string = `${repoUrl}/commit/${sha}`;
+    let url: string = '';
 
-    return [
-      {
-        type: 'mrkdwn',
-        text: `*Status*\n${status}`,
-      },
-      {
-        type: 'mrkdwn',
-        text: `*Commit*\n<${commitUrl}|\`${sha.substring(
-          0,
-          7,
-        )} (${this.getBranchName()})\`>`,
-      },
-    ];
+    const statusField: MrkdwnElement = {
+      type: 'mrkdwn',
+      text: `*Status*\n${status}`,
+    };
+
+    let refField: MrkdwnElement = {
+      type: 'mrkdwn',
+      text: `*Commit*\n<${commitUrl}|\`${sha.substring(0, 7)}\`>`,
+    };
+
+    switch (eventName) {
+      case 'pull_request':
+        if (issue.number > 0) {
+          url = `${repoUrl}/pull/${issue.number}`;
+          refField = {
+            type: 'mrkdwn',
+            text: `*Pull Request*\n<${url}|#${issue.number}>`,
+          };
+        }
+        break;
+      case 'push':
+        refField = {
+          type: 'mrkdwn',
+          text: `*Commit*\n<${commitUrl}|\`${sha.substring(
+            0,
+            7,
+          )} (${this.getBranchName()})\`>`,
+        };
+        break;
+      default:
+        break;
+    }
+
+    return [statusField, refField];
   }
 
   constructor(options: SlackOptions) {
