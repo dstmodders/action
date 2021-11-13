@@ -19,7 +19,6 @@ async function get(): Promise<Versions> {
     stylua: '',
   };
 
-  core.startGroup('Check versions');
   versions.lua = await lua.getVersion();
   versions.luacheck = await luacheck.getVersion();
   versions.prettier = await prettier.getVersion();
