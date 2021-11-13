@@ -5,25 +5,14 @@ import glob from 'glob';
 import ignore from 'ignore';
 import { AnnotationProperties } from '@actions/core';
 import { DiffEntry, compare } from './diff';
+import {
+  Lint,
+  LintAnnotation,
+  newEmptyAnnotations,
+  newEmptyLint,
+  printWarningsForFiles,
+} from './lint';
 import { Slack } from './slack';
-
-interface StyLuaLintAnnotation {
-  message: string;
-  properties: AnnotationProperties;
-}
-
-interface StyLuaLintFile {
-  annotations: [StyLuaLintAnnotation];
-  exitCode: number;
-  path: string;
-}
-
-interface StyLuaLint {
-  failed: number;
-  files: StyLuaLintFile[];
-  output: string;
-  passed: number;
-}
 
 async function getFiles(): Promise<string[]> {
   const ignoreFile: string = '.styluaignore';
@@ -61,14 +50,8 @@ async function getVersion(): Promise<string> {
   return result;
 }
 
-async function lint(): Promise<StyLuaLint> {
-  const result: StyLuaLint = {
-    failed: 0,
-    files: [<StyLuaLintFile>{}],
-    output: '',
-    passed: 0,
-  };
-  result.files.pop();
+async function lint(): Promise<Lint> {
+  const result: Lint = newEmptyLint();
 
   try {
     const files = await getFiles();
@@ -80,7 +63,7 @@ async function lint(): Promise<StyLuaLint> {
 
     // eslint-disable-next-line no-restricted-syntax
     for (const file of files) {
-      const annotations: [StyLuaLintAnnotation] = [<StyLuaLintAnnotation>{}];
+      const annotations: [LintAnnotation] = newEmptyAnnotations();
 
       // eslint-disable-next-line no-await-in-loop
       exitCode = await exec.exec('stylua', ['--check', file], {
@@ -139,29 +122,15 @@ async function lint(): Promise<StyLuaLint> {
   return result;
 }
 
-async function run(slack: Slack): Promise<StyLuaLint> {
+async function run(slack: Slack): Promise<Lint> {
   try {
     core.startGroup('Run StyLua');
-    const result: StyLuaLint = await lint();
+    const result: Lint = await lint();
 
     if (result.failed > 0) {
       core.info(`Failed: ${result.failed}`);
       core.info(`Passed: ${result.passed}`);
-
-      // eslint-disable-next-line no-restricted-syntax
-      for (const file of result.files) {
-        if (file.annotations.length > 0) {
-          core.info('');
-          core.info(file.path);
-          // eslint-disable-next-line no-restricted-syntax
-          for (const annotation of file.annotations) {
-            core.warning(annotation.message, {
-              ...annotation.properties,
-              title: 'StyLua',
-            });
-          }
-        }
-      }
+      printWarningsForFiles(result.files, 'StyLua');
     } else {
       core.info('No issues found');
     }
@@ -182,19 +151,11 @@ async function run(slack: Slack): Promise<StyLuaLint> {
   }
 }
 
-async function setOutput(l: StyLuaLint): Promise<void> {
+async function setOutput(l: Lint): Promise<void> {
   core.setOutput('stylua-failed', l.failed);
   core.setOutput('stylua-passed', l.passed);
   core.setOutput('stylua-total', l.files.length);
   core.setOutput('stylua-output', l.output);
 }
 
-export {
-  StyLuaLint,
-  StyLuaLintAnnotation,
-  StyLuaLintFile,
-  getVersion,
-  lint,
-  run,
-  setOutput,
-};
+export { getVersion, lint, run, setOutput };

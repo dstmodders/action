@@ -3,10 +3,9 @@ import * as luacheck from './luacheck';
 import * as prettier from './prettier';
 import * as stylua from './stylua';
 import * as versions from './versions';
+import { Lint } from './lint';
 import { LuacheckLint } from './luacheck';
-import { PrettierLint } from './prettier';
 import { Slack } from './slack';
-import { StyLuaLint } from './stylua';
 
 async function getEnv(
   name: string,
@@ -34,8 +33,8 @@ async function checkVersions(): Promise<versions.Versions> {
 async function setOutput(
   v: versions.Versions,
   luacheckLint: LuacheckLint,
-  prettierLint: PrettierLint,
-  styLuaLint: StyLuaLint,
+  prettierLint: Lint,
+  styLuaLint: Lint,
 ): Promise<void> {
   core.startGroup('Set output');
   await versions.setOutput(v);

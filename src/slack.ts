@@ -1,9 +1,8 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
+import { Lint, newEmptyLint } from './lint';
 import { LuacheckLint, LuacheckLintAnnotation } from './luacheck';
-import { PrettierLint, PrettierLintAnnotation } from './prettier';
-import { StyLuaLint, StyLuaLintAnnotation } from './stylua';
 
 interface SlackOptions {
   channel: string;
@@ -37,9 +36,9 @@ class Slack {
 
   public luacheckLint: LuacheckLint;
 
-  public prettierLint: PrettierLint;
+  public prettierLint: Lint;
 
-  public styLuaLint: StyLuaLint;
+  public styLuaLint: Lint;
 
   private static getBranchName(): string {
     const { ref } = github.context;
@@ -153,28 +152,14 @@ class Slack {
     this.isInProgress = false;
     this.isRunning = false;
     this.options = options;
+    this.prettierLint = newEmptyLint();
+    this.styLuaLint = newEmptyLint();
     this.timestamp = '';
 
     this.luacheckLint = <LuacheckLint>{
       annotations: [<LuacheckLintAnnotation>{}],
       output: '',
       issues: 0,
-    };
-
-    this.prettierLint = <PrettierLint>{
-      annotations: [<PrettierLintAnnotation>{}],
-      failed: 0,
-      files: [],
-      output: '',
-      passed: 0,
-    };
-
-    this.styLuaLint = <StyLuaLint>{
-      annotations: [<StyLuaLintAnnotation>{}],
-      failed: 0,
-      files: [],
-      output: '',
-      passed: 0,
     };
 
     this.app = new App({

@@ -1,28 +1,17 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import { AnnotationProperties } from '@actions/core';
 import fs from 'fs';
 import glob from 'glob';
 import ignore from 'ignore';
+import { AnnotationProperties } from '@actions/core';
+import {
+  Lint,
+  LintAnnotation,
+  newEmptyAnnotations,
+  newEmptyLint,
+  printWarningsForFiles,
+} from './lint';
 import { Slack } from './slack';
-
-interface PrettierLintAnnotation {
-  message: string;
-  properties: AnnotationProperties;
-}
-
-interface PrettierLintFile {
-  path: string;
-  exitCode: number;
-}
-
-interface PrettierLint {
-  annotations: [PrettierLintAnnotation];
-  failed: number;
-  files: PrettierLintFile[];
-  output: string;
-  passed: number;
-}
 
 async function getFiles(): Promise<string[]> {
   const ignoreFile: string = '.prettierignore';
@@ -60,15 +49,8 @@ async function getVersion(): Promise<string> {
   return result;
 }
 
-async function lint(): Promise<PrettierLint> {
-  const result: PrettierLint = {
-    annotations: [<PrettierLintAnnotation>{}],
-    failed: 0,
-    files: [],
-    output: '',
-    passed: 0,
-  };
-  result.annotations.pop();
+async function lint(): Promise<Lint> {
+  const result: Lint = newEmptyLint();
 
   try {
     const files = await getFiles();
@@ -80,6 +62,8 @@ async function lint(): Promise<PrettierLint> {
 
     // eslint-disable-next-line no-restricted-syntax
     for (const file of files) {
+      const annotations: [LintAnnotation] = newEmptyAnnotations();
+
       // eslint-disable-next-line no-await-in-loop
       exitCode = await exec.exec('prettier', ['--check', '--no-color', file], {
         ignoreReturnCode: true,
@@ -91,7 +75,7 @@ async function lint(): Promise<PrettierLint> {
       } else {
         result.failed += 1;
         result.output += `${file}\n`;
-        result.annotations.push({
+        annotations.push({
           message: 'Code style issues found',
           properties: <AnnotationProperties>{
             file,
@@ -101,6 +85,7 @@ async function lint(): Promise<PrettierLint> {
 
       result.files.push({
         path: file,
+        annotations,
         exitCode,
       });
     }
@@ -113,24 +98,15 @@ async function lint(): Promise<PrettierLint> {
   return result;
 }
 
-async function run(slack: Slack): Promise<PrettierLint> {
+async function run(slack: Slack): Promise<Lint> {
   try {
     core.startGroup('Run Prettier');
-    const result: PrettierLint = await lint();
+    const result: Lint = await lint();
 
     if (result.failed > 0) {
       core.info(`Failed: ${result.failed}`);
       core.info(`Passed: ${result.passed}`);
-      core.info('');
-      core.info(result.output);
-
-      // eslint-disable-next-line no-restricted-syntax
-      for (const annotation of result.annotations) {
-        core.warning(annotation.message, {
-          ...annotation.properties,
-          title: 'Prettier',
-        });
-      }
+      printWarningsForFiles(result.files, 'Prettier');
     } else {
       core.info('No issues found');
     }
@@ -151,19 +127,11 @@ async function run(slack: Slack): Promise<PrettierLint> {
   }
 }
 
-async function setOutput(l: PrettierLint): Promise<void> {
+async function setOutput(l: Lint): Promise<void> {
   core.setOutput('prettier-failed', l.failed);
   core.setOutput('prettier-passed', l.passed);
   core.setOutput('prettier-total', l.files.length);
   core.setOutput('prettier-output', l.output);
 }
 
-export {
-  PrettierLint,
-  PrettierLintAnnotation,
-  PrettierLintFile,
-  getVersion,
-  lint,
-  run,
-  setOutput,
-};
+export { getVersion, lint, run, setOutput };
