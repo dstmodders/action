@@ -4,4 +4,4 @@ WORKDIR /opt/action/
 COPY . .
 RUN yarn install
 
-ENTRYPOINT ["node", "/opt/action/lib/main.js"]
+ENTRYPOINT ["node", "/opt/action/lib/index.js"]

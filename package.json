@@ -37,7 +37,7 @@
     "prettier"
   ],
   "license": "MIT",
-  "main": "lib/main.js",
+  "main": "lib/index.js",
   "repository": {
     "type": "git",
     "url": "github:dstmodders/github-action"
