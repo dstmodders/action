@@ -101,7 +101,7 @@ async function lint(): Promise<LuacheckLint> {
   return result;
 }
 
-async function run(slack: Slack): Promise<LuacheckLint> {
+async function run(slack: Slack | null): Promise<LuacheckLint> {
   try {
     core.startGroup('Run Luacheck');
     const result: LuacheckLint = await lint();
@@ -126,7 +126,9 @@ async function run(slack: Slack): Promise<LuacheckLint> {
       core.info('No issues found');
     }
 
-    if (slack.isRunning) {
+    if (slack && slack.isRunning) {
+      // eslint-disable-next-line no-param-reassign
+      slack.luacheckLint = result;
       if (await slack.update()) {
         if (result.issues > 0) {
           core.info('');

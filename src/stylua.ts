@@ -1,29 +1,18 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import fs from 'fs';
-import glob from 'glob';
-import ignore from 'ignore';
 import { AnnotationProperties } from '@actions/core';
 import { DiffEntry, compare } from './diff';
 import {
   Lint,
   LintAnnotation,
+  getFiles,
   newEmptyAnnotations,
   newEmptyLint,
-  printWarningsForFiles,
+  print,
+  updateSlack,
 } from './lint';
 import { Slack } from './slack';
-
-async function getFiles(): Promise<string[]> {
-  const ignoreFile: string = '.styluaignore';
-  if (fs.existsSync(ignoreFile)) {
-    const data: string = fs.readFileSync(ignoreFile, 'utf8');
-    const ignored: string[] = data.trim().split(/\r\n|\r|\n/);
-    const paths = glob.sync('**/*.lua');
-    return Promise.resolve(ignore().add(ignored).filter(paths));
-  }
-  return Promise.resolve(glob.sync('**/*.lua'));
-}
 
 async function getVersion(): Promise<string> {
   let result: string = '';
@@ -54,7 +43,7 @@ async function lint(): Promise<Lint> {
   const result: Lint = newEmptyLint();
 
   try {
-    const files = await getFiles();
+    const files = await getFiles('.styluaignore', 'lua');
     let exitCode: number = 0;
 
     core.info(
@@ -122,31 +111,21 @@ async function lint(): Promise<Lint> {
   return result;
 }
 
-async function run(slack: Slack): Promise<Lint> {
+async function run(slack: Slack | null): Promise<Lint> {
   try {
-    core.startGroup('Run StyLua');
+    const title = 'StyLua';
+    core.startGroup(`Run ${title}`);
     const result: Lint = await lint();
-
-    if (result.failed > 0) {
-      core.info(`Failed: ${result.failed}`);
-      core.info(`Passed: ${result.passed}`);
-      printWarningsForFiles(result.files, 'StyLua');
-    } else {
-      core.info('No issues found');
+    print(result, title);
+    if (slack) {
+      // eslint-disable-next-line no-param-reassign
+      slack.styLuaLint = result;
+      await updateSlack(result, slack);
     }
-
-    if (slack.isRunning) {
-      if (await slack.update()) {
-        if (result.failed > 0) {
-          core.info('');
-        }
-        core.info('Updated Slack message');
-      }
-    }
-
     core.endGroup();
-    return Promise.resolve(result);
+    return result;
   } catch (error) {
+    core.endGroup();
     return Promise.reject(error);
   }
 }
