@@ -13,12 +13,12 @@ interface StyLuaLintAnnotation {
 }
 
 interface StyLuaLintFile {
-  path: string;
+  annotations: [StyLuaLintAnnotation];
   exitCode: number;
+  path: string;
 }
 
 interface StyLuaLint {
-  annotations: [StyLuaLintAnnotation];
   failed: number;
   files: StyLuaLintFile[];
   output: string;
@@ -63,13 +63,12 @@ async function getVersion(): Promise<string> {
 
 async function lint(): Promise<StyLuaLint> {
   const result: StyLuaLint = {
-    annotations: [<StyLuaLintAnnotation>{}],
     failed: 0,
-    files: [],
+    files: [<StyLuaLintFile>{}],
     output: '',
     passed: 0,
   };
-  result.annotations.pop();
+  result.files.pop();
 
   try {
     const files = await getFiles();
@@ -81,6 +80,8 @@ async function lint(): Promise<StyLuaLint> {
 
     // eslint-disable-next-line no-restricted-syntax
     for (const file of files) {
+      const annotations: [StyLuaLintAnnotation] = [<StyLuaLintAnnotation>{}];
+
       // eslint-disable-next-line no-await-in-loop
       exitCode = await exec.exec('stylua', ['--check', file], {
         ignoreReturnCode: true,
@@ -106,19 +107,13 @@ async function lint(): Promise<StyLuaLint> {
 
         result.failed += 1;
         result.output += `${file}\n`;
-        result.annotations.push({
-          message: 'Code style issues found',
-          properties: <AnnotationProperties>{
-            file,
-          },
-        });
 
         // eslint-disable-next-line no-await-in-loop
         const diffEntries: DiffEntry[] = await compare(original, changed);
 
         diffEntries.forEach((entry) => {
           if (entry.line > 0 && entry.newValue.length > 0) {
-            result.annotations.push({
+            annotations.push({
               message: entry.newValue,
               properties: <AnnotationProperties>{
                 startLine: entry.line,
@@ -131,6 +126,7 @@ async function lint(): Promise<StyLuaLint> {
 
       result.files.push({
         path: file,
+        annotations,
         exitCode,
       });
     }
@@ -151,15 +147,20 @@ async function run(slack: Slack): Promise<StyLuaLint> {
     if (result.failed > 0) {
       core.info(`Failed: ${result.failed}`);
       core.info(`Passed: ${result.passed}`);
-      core.info('');
-      core.info(result.output);
 
       // eslint-disable-next-line no-restricted-syntax
-      for (const annotation of result.annotations) {
-        core.warning(annotation.message, {
-          ...annotation.properties,
-          title: 'StyLua',
-        });
+      for (const file of result.files) {
+        if (file.annotations.length > 0) {
+          core.info('');
+          core.info(file.path);
+          // eslint-disable-next-line no-restricted-syntax
+          for (const annotation of file.annotations) {
+            core.warning(annotation.message, {
+              ...annotation.properties,
+              title: 'StyLua',
+            });
+          }
+        }
       }
     } else {
       core.info('No issues found');
