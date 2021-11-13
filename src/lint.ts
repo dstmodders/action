@@ -19,6 +19,7 @@ interface LintFile {
 interface Lint {
   failed: number;
   files: LintFile[];
+  issues: number,
   output: string;
   passed: number;
 }
@@ -46,6 +47,7 @@ function newEmptyLint(): Lint {
   const result: Lint = {
     failed: 0,
     files: [<LintFile>{}],
+    issues: 0,
     output: '',
     passed: 0,
   };

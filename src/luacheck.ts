@@ -2,17 +2,15 @@ import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import { AnnotationProperties } from '@actions/core';
 import { Slack } from './slack';
-
-interface LuacheckLintAnnotation {
-  message: string;
-  properties: AnnotationProperties;
-}
-
-interface LuacheckLint {
-  annotations: [LuacheckLintAnnotation];
-  output: string;
-  issues: number;
-}
+import {
+  Lint,
+  LintAnnotation,
+  getFiles,
+  newEmptyAnnotations,
+  newEmptyLint,
+  print,
+  updateSlack,
+} from './lint';
 
 async function getVersion(): Promise<string> {
   let result: string = '';
@@ -40,60 +38,74 @@ async function getVersion(): Promise<string> {
   return result;
 }
 
-async function lint(): Promise<LuacheckLint> {
-  const result: LuacheckLint = {
-    annotations: [<LuacheckLintAnnotation>{}],
-    output: '',
-    issues: 0,
-  };
-  result.annotations.pop();
+async function lint(): Promise<Lint> {
+  const result: Lint = newEmptyLint();
 
   try {
-    let lines: string[] = [];
-    let output: string = '';
+    const files = await getFiles('.luacheckignore', 'lua');
+    let exitCode: number = 0;
 
-    await exec
-      .exec('luacheck', ['.', '--exclude-files="here/"', '--formatter=plain'], {
+    core.info(
+      `Checking ${files.length} file${files.length === 1 ? '' : 's'}...`,
+    );
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const file of files) {
+      const annotations: [LintAnnotation] = newEmptyAnnotations();
+      let output: string = '';
+
+      // eslint-disable-next-line no-await-in-loop
+      exitCode = await exec.exec('luacheck', ['--formatter=plain', file], {
+        ignoreReturnCode: true,
         silent: true,
         listeners: {
           stdout: (data: Buffer) => {
             output += data.toString();
           },
         },
-      })
-      .then(() => {
-        core.debug('Success');
-      })
-      .catch(() => {
-        core.debug('Non-zero exit code');
-        lines = output.trim().split(/\r\n|\r|\n/);
       });
 
-    let matches: RegExpMatchArray | null = [];
-    // eslint-disable-next-line no-restricted-syntax
-    for (const line of lines) {
-      matches = line.match(/(.*):(\d*):(\d*): (.*)/i);
-      if (matches) {
-        const [, file, startLine, startColumn, message] = matches;
-        if (
-          file.length > 0 &&
-          startLine.length > 0 &&
-          startColumn.length > 0 &&
-          message.length > 0
-        )
-          result.annotations.push({
-            properties: <AnnotationProperties>{
-              startLine: Number(startLine),
-              startColumn: Number(startColumn),
-              file,
-            },
-            message,
-          });
+      if (exitCode === 0) {
+        result.passed += 1;
+      } else {
+        result.failed += 1;
+        result.output += `${file}\n`;
+
+        const lines: string[] = output.trim().split(/\r\n|\r|\n/);
+        let matches: RegExpMatchArray | null = [];
+        // eslint-disable-next-line no-restricted-syntax
+        for (const line of lines) {
+          matches = line.match(/(.*):(\d*):(\d*): (.*)/i);
+          if (matches) {
+            const [, , startLine, startColumn, message] = matches;
+            if (
+              file.length > 0 &&
+              startLine.length > 0 &&
+              startColumn.length > 0 &&
+              message.length > 0
+            ) {
+              result.issues += 1;
+              annotations.push({
+                properties: <AnnotationProperties>{
+                  startLine: Number(startLine),
+                  startColumn: Number(startColumn),
+                  file,
+                },
+                message,
+              });
+            }
+          }
+        }
+
+        result.files.push({
+          path: file,
+          annotations,
+          exitCode,
+        });
       }
     }
 
-    result.issues = lines.length;
-    result.output = output.trim();
+    result.output = result.output.trim();
   } catch (error) {
     return Promise.reject(error);
   }
@@ -101,59 +113,31 @@ async function lint(): Promise<LuacheckLint> {
   return result;
 }
 
-async function run(slack: Slack | null): Promise<LuacheckLint> {
+async function run(slack: Slack | null): Promise<Lint> {
   try {
-    core.startGroup('Run Luacheck');
-    const result: LuacheckLint = await lint();
-
-    if (result.issues > 0) {
-      core.info(
-        `Found ${result.issues} issue${
-          result.issues === 0 || result.issues > 1 ? 's' : ''
-        }`,
-      );
-      core.info('');
-      core.info(result.output);
-
-      // eslint-disable-next-line no-restricted-syntax
-      for (const annotation of result.annotations) {
-        core.warning(annotation.message, {
-          ...annotation.properties,
-          title: 'Luacheck',
-        });
-      }
-    } else {
-      core.info('No issues found');
-    }
-
-    if (slack && slack.isRunning) {
+    const title = 'Luacheck';
+    core.startGroup(`Run ${title}`);
+    const result: Lint = await lint();
+    print(result, title);
+    if (slack) {
       // eslint-disable-next-line no-param-reassign
       slack.luacheckLint = result;
-      if (await slack.update()) {
-        if (result.issues > 0) {
-          core.info('');
-        }
-        core.info('Updated Slack message');
-      }
+      await updateSlack(result, slack);
     }
-
     core.endGroup();
-    return Promise.resolve(result);
+    return result;
   } catch (error) {
+    core.endGroup();
     return Promise.reject(error);
   }
 }
 
-async function setOutput(l: LuacheckLint): Promise<void> {
+async function setOutput(l: Lint): Promise<void> {
+  core.setOutput('luacheck-failed', l.failed);
   core.setOutput('luacheck-issues', l.issues);
   core.setOutput('luacheck-output', l.output);
+  core.setOutput('luacheck-passed', l.passed);
+  core.setOutput('luacheck-total', l.files.length);
 }
 
-export {
-  LuacheckLint,
-  LuacheckLintAnnotation,
-  getVersion,
-  lint,
-  run,
-  setOutput,
-};
+export { getVersion, lint, run, setOutput };

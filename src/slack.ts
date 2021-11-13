@@ -2,7 +2,6 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
 import { Lint, newEmptyLint } from './lint';
-import { LuacheckLint, LuacheckLintAnnotation } from './luacheck';
 
 interface SlackOptions {
   channel: string;
@@ -34,7 +33,7 @@ class Slack {
 
   public isRunning: boolean;
 
-  public luacheckLint: LuacheckLint;
+  public luacheckLint: Lint;
 
   public prettierLint: Lint;
 
@@ -151,16 +150,11 @@ class Slack {
     this.channelID = '';
     this.isInProgress = false;
     this.isRunning = false;
+    this.luacheckLint = newEmptyLint();
     this.options = options;
     this.prettierLint = newEmptyLint();
     this.styLuaLint = newEmptyLint();
     this.timestamp = '';
-
-    this.luacheckLint = <LuacheckLint>{
-      annotations: [<LuacheckLintAnnotation>{}],
-      output: '',
-      issues: 0,
-    };
 
     this.app = new App({
       signingSecret: options.signingSecret,
