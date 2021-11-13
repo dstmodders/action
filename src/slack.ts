@@ -27,11 +27,13 @@ class Slack {
 
   private channelID: string;
 
-  private inProgress: boolean;
+  private isInProgress: boolean;
 
   private options: SlackOptions;
 
   private timestamp: string;
+
+  public isRunning: boolean;
 
   public luacheckLint: LuacheckLint;
 
@@ -148,7 +150,8 @@ class Slack {
 
   constructor(options: SlackOptions) {
     this.channelID = '';
-    this.inProgress = false;
+    this.isInProgress = false;
+    this.isRunning = false;
     this.options = options;
     this.timestamp = '';
 
@@ -202,7 +205,11 @@ class Slack {
     return result;
   }
 
-  private async post() {
+  private async post(): Promise<boolean> {
+    if (!this.isRunning) {
+      throw new Error('Slack app is not running');
+    }
+
     const fields: MrkdwnElement[] = Slack.getGeneralFields('In progress');
 
     if (this.options.run.luacheck) {
@@ -217,7 +224,7 @@ class Slack {
       fields.push(Slack.getCheckingField('StyLua issues'));
     }
 
-    core.debug('Posting message...');
+    core.debug('Posting Slack message...');
     const result = await this.app.client.chat.postMessage({
       channel: this.channelID,
       text: Slack.getText(),
@@ -235,36 +242,38 @@ class Slack {
       ],
     });
 
-    core.info('Posted message');
-
     if (typeof result.ts === 'string') {
       core.debug(`Timestamp: ${result.ts}`);
       this.timestamp = result.ts;
     }
 
-    return result;
+    return true;
   }
 
-  public async update() {
+  public async update(): Promise<boolean> {
+    if (!this.isRunning) {
+      throw new Error('Slack app is not running');
+    }
+
     let color = this.options.colors.default;
     let fields = Slack.getGeneralFields('In progress');
 
     if (
-      !this.inProgress &&
+      !this.isInProgress &&
       (this.luacheckLint.issues > 0 ||
         this.prettierLint.failed > 0 ||
         this.styLuaLint.failed > 0)
     ) {
       color = this.options.colors.failure;
       fields = Slack.getGeneralFields('Failed');
-    } else if (!this.inProgress) {
+    } else if (!this.isInProgress) {
       color = this.options.colors.success;
       fields = Slack.getGeneralFields('Success');
     }
 
     if (this.options.run.luacheck) {
       fields.push(
-        this.inProgress
+        this.isInProgress
           ? Slack.getCheckingField('Luacheck issues')
           : Slack.getField(
               'Luacheck issues',
@@ -275,7 +284,7 @@ class Slack {
 
     if (this.options.run.prettier) {
       fields.push(
-        this.inProgress
+        this.isInProgress
           ? Slack.getCheckingField('Prettier issues')
           : Slack.getField(
               'Prettier passes',
@@ -286,7 +295,7 @@ class Slack {
 
     if (this.options.run.stylua) {
       fields.push(
-        this.inProgress
+        this.isInProgress
           ? Slack.getCheckingField('StyLua issues')
           : Slack.getField(
               'StyLua passes',
@@ -295,7 +304,7 @@ class Slack {
       );
     }
 
-    core.debug('Updating message...');
+    core.debug('Updating Slack message...');
     const result = await this.app.client.chat.update({
       channel: this.channelID,
       text: Slack.getText(),
@@ -314,37 +323,53 @@ class Slack {
       ],
     });
 
-    core.info('Updated message');
-
     if (typeof result.ts === 'string') {
       core.debug(`Timestamp: ${result.ts}`);
       this.timestamp = result.ts;
     }
 
-    return result;
+    return true;
   }
 
-  public async start(): Promise<void> {
+  public async start(): Promise<void | Error> {
     core.startGroup('Run Slack app');
     core.debug('Starting Slack app...');
-    this.inProgress = true;
-    await this.app.start(3000);
-    core.debug('Slack app is running');
-    await this.findChannel(this.options.channel);
-    if (this.channelID.length > 0) {
-      await this.post();
+    try {
+      await this.app.start(3000);
+      this.isInProgress = true;
+      this.isRunning = true;
+      core.info('Started Slack app');
+      await this.findChannel(this.options.channel);
+      if (this.channelID.length > 0) {
+        if (await this.post()) {
+          core.info('Posted Slack message');
+        }
+      }
+      core.endGroup();
+      return Promise.resolve();
+    } catch (error) {
+      core.endGroup();
+      return Promise.reject(error);
     }
-    core.endGroup();
   }
 
-  public async stop(): Promise<void> {
+  public async stop(): Promise<void | Error> {
     core.startGroup('Stop Slack app');
     core.debug('Stopping Slack app...');
-    this.inProgress = false;
-    await this.update();
-    await this.app.stop();
-    core.debug('Slack app is stopped');
-    core.endGroup();
+    try {
+      this.isInProgress = false;
+      if (await this.update()) {
+        core.info('Updated Slack message');
+      }
+      await this.app.stop();
+      this.isRunning = false;
+      core.info('Stopped Slack app');
+      core.endGroup();
+      return Promise.resolve();
+    } catch (error) {
+      core.endGroup();
+      return Promise.reject(error);
+    }
   }
 }
 

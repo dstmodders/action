@@ -5,6 +5,7 @@ import glob from 'glob';
 import ignore from 'ignore';
 import { AnnotationProperties } from '@actions/core';
 import { DiffEntry, compare } from './diff';
+import { Slack } from './slack';
 
 interface StyLuaLintAnnotation {
   message: string;
@@ -142,13 +143,15 @@ async function lint(): Promise<StyLuaLint> {
   return result;
 }
 
-async function run(): Promise<StyLuaLint> {
+async function run(slack: Slack): Promise<StyLuaLint> {
   try {
     core.startGroup('Run StyLua');
     const result: StyLuaLint = await lint();
 
     if (result.failed > 0) {
-      core.info(`Failed: ${result.failed}. Passed: ${result.passed}.\n`);
+      core.info(`Failed: ${result.failed}`);
+      core.info(`Passed: ${result.passed}`);
+      core.info('');
       core.info(result.output);
 
       // eslint-disable-next-line no-restricted-syntax
@@ -160,6 +163,15 @@ async function run(): Promise<StyLuaLint> {
       }
     } else {
       core.info('No issues found');
+    }
+
+    if (slack.isRunning) {
+      if (await slack.update()) {
+        if (result.failed > 0) {
+          core.info('');
+        }
+        core.info('Updated Slack message');
+      }
     }
 
     core.endGroup();

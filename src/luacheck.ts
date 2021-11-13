@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import { AnnotationProperties } from '@actions/core';
+import { Slack } from './slack';
 
 interface LuacheckLintAnnotation {
   message: string;
@@ -100,7 +101,7 @@ async function lint(): Promise<LuacheckLint> {
   return result;
 }
 
-async function run(): Promise<LuacheckLint> {
+async function run(slack: Slack): Promise<LuacheckLint> {
   try {
     core.startGroup('Run Luacheck');
     const result: LuacheckLint = await lint();
@@ -109,8 +110,9 @@ async function run(): Promise<LuacheckLint> {
       core.info(
         `Found ${result.issues} issue${
           result.issues === 0 || result.issues > 1 ? 's' : ''
-        }:\n`,
+        }`,
       );
+      core.info('');
       core.info(result.output);
 
       // eslint-disable-next-line no-restricted-syntax
@@ -122,6 +124,15 @@ async function run(): Promise<LuacheckLint> {
       }
     } else {
       core.info('No issues found');
+    }
+
+    if (slack.isRunning) {
+      if (await slack.update()) {
+        if (result.issues > 0) {
+          core.info('');
+        }
+        core.info('Updated Slack message');
+      }
     }
 
     core.endGroup();
