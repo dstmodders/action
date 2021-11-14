@@ -35,6 +35,8 @@ inputs:
     description: 'Run StyLua'
     required: false
 outputs:
+  busted-version:
+    description: 'Busted version'
   lua-version:
     description: 'Lua version'
   luacheck-version:
