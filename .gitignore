@@ -1,7 +1,8 @@
 ### Intellij ###
 .idea/
 
-### NodeJS ###
+### Node ###
+coverage/
 node_modules/
 
 ### Project ###
