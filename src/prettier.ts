@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import fs from 'fs';
 import { AnnotationProperties } from '@actions/core';
 import {
   Lint,
@@ -11,6 +12,7 @@ import {
   updateSlack,
 } from './lint';
 import { Slack } from './slack';
+import { compare, DiffEntry } from './diff';
 
 async function getVersion(): Promise<string> {
   let result: string = '';
@@ -61,13 +63,36 @@ async function lint(): Promise<Lint> {
       if (exitCode === 0) {
         result.passed += 1;
       } else {
+        const original: string = fs.readFileSync(file, 'utf8');
+        let changed: string = '';
+
+        // eslint-disable-next-line no-await-in-loop
+        await exec.exec(`prettier ${file}"`, [], {
+          ignoreReturnCode: true,
+          silent: true,
+          listeners: {
+            stdout: (data: Buffer) => {
+              changed += data.toString();
+            },
+          },
+        });
+
         result.failed += 1;
         result.output += `${file}\n`;
-        annotations.push({
-          message: 'Code style issues found',
-          properties: <AnnotationProperties>{
-            file,
-          },
+
+        // eslint-disable-next-line no-await-in-loop
+        const diffEntries: DiffEntry[] = await compare(original, changed);
+
+        diffEntries.forEach((entry) => {
+          if (entry.startLine > 0 && entry.value.length > 0) {
+            annotations.push({
+              message: entry.value,
+              properties: <AnnotationProperties>{
+                startLine: entry.startLine,
+                file,
+              },
+            });
+          }
         });
       }
 
