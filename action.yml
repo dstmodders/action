@@ -2,6 +2,10 @@ name: 'Depressed DST Modders GitHub Action'
 description: "Run different modding tools for Don't Starve Together game"
 author: 'Depressed DST Modders'
 inputs:
+  busted:
+    default: 'false'
+    description: 'Run Busted'
+    required: false
   luacheck:
     default: 'false'
     description: 'Run Luacheck'

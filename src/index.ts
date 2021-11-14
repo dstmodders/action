@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import * as busted from './busted';
 import * as luacheck from './luacheck';
 import * as prettier from './prettier';
 import * as stylua from './stylua';
@@ -46,12 +47,14 @@ async function setOutput(
 
 async function run() {
   let slack: Slack | null = null;
+  let inputBusted: boolean = false;
   let inputLuacheck: boolean = false;
   let inputPrettier: boolean = false;
   let inputSlack: boolean = false;
   let inputStyLua: boolean = false;
 
   try {
+    inputBusted = core.getBooleanInput('busted');
     inputLuacheck = core.getBooleanInput('luacheck');
     inputPrettier = core.getBooleanInput('prettier');
     inputSlack = core.getBooleanInput('slack');
@@ -89,6 +92,10 @@ async function run() {
 
     if (inputSlack) {
       await slack.start();
+    }
+
+    if (inputBusted) {
+      await busted.run();
     }
 
     if (inputLuacheck) {

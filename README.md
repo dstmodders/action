@@ -14,6 +14,10 @@ issues. It supports [Slack][] notification as well.
 ```yml
 - uses: dstmodders/github-action@main
   with:
+    # Run Busted
+    # Default: false
+    busted: true
+
     # Run Luacheck
     # Default: false
     luacheck: true
