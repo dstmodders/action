@@ -86,7 +86,7 @@ async function lint(): Promise<Lint> {
   return result;
 }
 
-async function run(slack: Slack | null): Promise<Lint> {
+async function run(slack: Slack | null = null): Promise<Lint> {
   try {
     const title = 'Prettier';
     core.startGroup(`Run ${title}`);
