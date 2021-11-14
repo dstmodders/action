@@ -6,6 +6,7 @@ import * as stylua from './stylua';
 import * as versions from './versions';
 import { Lint } from './lint';
 import { Slack } from './slack';
+import { Test } from './busted';
 
 async function getEnv(
   name: string,
@@ -33,12 +34,14 @@ async function checkVersions(): Promise<versions.Versions> {
 
 async function setOutput(
   v: versions.Versions,
+  bustedTest: Test,
   luacheckLint: Lint,
   prettierLint: Lint,
   styLuaLint: Lint,
 ): Promise<void> {
   core.startGroup('Set output');
   await versions.setOutput(v);
+  await busted.setOutput(bustedTest);
   await luacheck.setOutput(luacheckLint);
   await prettier.setOutput(prettierLint);
   await stylua.setOutput(styLuaLint);
@@ -117,6 +120,7 @@ async function run() {
 
     await setOutput(
       v,
+      slack.bustedTest,
       slack.luacheckLint,
       slack.prettierLint,
       slack.styLuaLint,

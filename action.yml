@@ -50,6 +50,15 @@ outputs:
   stylua-version:
     description: 'StyLua version'
 
+  busted-total:
+    description: 'Number of total tests checked by Busted'
+  busted-failed:
+    description: 'Number of failed tests by Busted'
+  busted-passed:
+    description: 'Number of passed tests by Busted'
+  busted-output:
+    description: 'Busted output'
+
   luacheck-total:
     description: 'Number of total files checked by Luacheck'
   luacheck-failed:

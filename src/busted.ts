@@ -154,4 +154,11 @@ async function run(slack: Slack | null = null): Promise<Test> {
   }
 }
 
-export { Test, getNrOfTests, getVersion, newEmptyTest, run, test };
+async function setOutput(t: Test): Promise<void> {
+  core.setOutput('busted-failed', t.failed);
+  core.setOutput('busted-output', t.output);
+  core.setOutput('busted-passed', t.passed);
+  core.setOutput('busted-total', t.total);
+}
+
+export { Test, getNrOfTests, getVersion, newEmptyTest, run, setOutput, test };
