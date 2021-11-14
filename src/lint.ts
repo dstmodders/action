@@ -4,6 +4,7 @@ import glob from 'glob';
 import ignore from 'ignore';
 import { AnnotationProperties } from '@actions/core';
 import { Slack } from './slack';
+import { compare, DiffEntry } from './diff';
 
 interface LintAnnotation {
   message: string;
@@ -19,22 +20,9 @@ interface LintFile {
 interface Lint {
   failed: number;
   files: LintFile[];
-  issues: number,
+  issues: number;
   output: string;
   passed: number;
-}
-
-async function getFiles(
-  ignoreFile: string,
-  extensions: string,
-): Promise<string[]> {
-  if (fs.existsSync(ignoreFile)) {
-    const data: string = fs.readFileSync(ignoreFile, 'utf8');
-    const ignored: string[] = data.trim().split(/\r\n|\r|\n/);
-    const paths = glob.sync(`**/*.${extensions}`);
-    return Promise.resolve(ignore().add(ignored).filter(paths));
-  }
-  return Promise.resolve(glob.sync(`**/*.${extensions}`));
 }
 
 function newEmptyAnnotations(): [LintAnnotation] {
@@ -82,6 +70,40 @@ function print(result: Lint, title: string): void {
   }
 }
 
+async function getFiles(
+  ignoreFile: string,
+  extensions: string,
+): Promise<string[]> {
+  if (fs.existsSync(ignoreFile)) {
+    const data: string = fs.readFileSync(ignoreFile, 'utf8');
+    const ignored: string[] = data.trim().split(/\r\n|\r|\n/);
+    const paths = glob.sync(`**/*.${extensions}`);
+    return Promise.resolve(ignore().add(ignored).filter(paths));
+  }
+  return Promise.resolve(glob.sync(`**/*.${extensions}`));
+}
+
+async function compareToAnnotations(
+  annotations: [LintAnnotation],
+  file: string,
+  changed: string,
+): Promise<void> {
+  const original: string = fs.readFileSync(file, 'utf8');
+  const diffEntries: DiffEntry[] = await compare(original, changed);
+  diffEntries.forEach((entry) => {
+    if (entry.startLine > 0 && entry.value.length > 0) {
+      annotations.push({
+        message: entry.value,
+        properties: <AnnotationProperties>{
+          startLine: entry.startLine,
+          file,
+        },
+      });
+    }
+  });
+  return Promise.resolve();
+}
+
 async function updateSlack(result: Lint, slack: Slack): Promise<void> {
   try {
     if (slack.isRunning) {
@@ -103,6 +125,7 @@ export {
   Lint,
   LintAnnotation,
   LintFile,
+  compareToAnnotations,
   getFiles,
   newEmptyAnnotations,
   newEmptyLint,
