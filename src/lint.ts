@@ -7,6 +7,7 @@ import { Slack } from './slack';
 import { compare, DiffEntry } from './diff';
 
 interface LintAnnotation {
+  action?: string;
   message: string;
   properties: AnnotationProperties;
 }
@@ -51,9 +52,21 @@ function printWarningsForFiles(files: LintFile[], title: string): void {
       core.info(file.path);
       // eslint-disable-next-line no-restricted-syntax
       for (const annotation of file.annotations) {
+        let lineRef = `L${annotation.properties.startLine}`;
+        if (annotation.properties.endLine) {
+          lineRef = `${lineRef}-L${annotation.properties.endLine}`;
+        }
+
+        let { action } = annotation;
+        if (action) {
+          action = action.charAt(0).toUpperCase() + action.slice(1);
+        }
+
         core.warning(annotation.message, {
           ...annotation.properties,
-          title,
+          title: action
+            ? `${title} / ${file.path}#${lineRef} / ${action}`
+            : `${title} / ${file.path}#${lineRef}`,
         });
       }
     }
@@ -93,6 +106,7 @@ async function compareToAnnotations(
   diffEntries.forEach((entry) => {
     if (entry.startLine > 0 && entry.value.length > 0) {
       annotations.push({
+        action: entry.action,
         message: entry.value,
         properties: <AnnotationProperties>{
           endLine: entry.endLine,
