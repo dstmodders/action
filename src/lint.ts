@@ -95,6 +95,7 @@ async function compareToAnnotations(
       annotations.push({
         message: entry.value,
         properties: <AnnotationProperties>{
+          endLine: entry.endLine,
           startLine: entry.startLine,
           file,
         },
