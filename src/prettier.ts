@@ -8,7 +8,6 @@ import {
   newEmptyAnnotations,
   newEmptyLint,
   print,
-  updateSlack,
 } from './lint';
 import { Slack } from './slack';
 
@@ -103,9 +102,7 @@ async function run(slack: Slack | null = null): Promise<Lint> {
     const result: Lint = await lint();
     print(result, title);
     if (slack) {
-      // eslint-disable-next-line no-param-reassign
-      slack.prettierLint = result;
-      await updateSlack(result, slack);
+      await slack.updatePrettier(result);
     }
     core.endGroup();
     return result;

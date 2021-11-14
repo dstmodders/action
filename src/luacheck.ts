@@ -9,7 +9,6 @@ import {
   newEmptyAnnotations,
   newEmptyLint,
   print,
-  updateSlack,
 } from './lint';
 
 async function getVersion(): Promise<string> {
@@ -120,9 +119,7 @@ async function run(slack: Slack | null = null): Promise<Lint> {
     const result: Lint = await lint();
     print(result, title);
     if (slack) {
-      // eslint-disable-next-line no-param-reassign
-      slack.luacheckLint = result;
-      await updateSlack(result, slack);
+      await slack.updateLuacheck(result);
     }
     core.endGroup();
     return result;

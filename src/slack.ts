@@ -310,6 +310,39 @@ class Slack {
     return true;
   }
 
+  public async updateLint(result: Lint): Promise<void> {
+    if (!this.isRunning) {
+      throw new Error('Slack app is not running');
+    }
+
+    try {
+      if (await this.update()) {
+        if (result.failed > 0) {
+          core.info('');
+        }
+        core.info('Updated Slack message');
+      }
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  public async updateLuacheck(result: Lint): Promise<void> {
+    this.luacheckLint = result;
+    return this.updateLint(result);
+  }
+
+  public async updatePrettier(result: Lint): Promise<void> {
+    this.prettierLint = result;
+    return this.updateLint(result);
+  }
+
+  public async updateStyLua(result: Lint): Promise<void> {
+    this.styLuaLint = result;
+    return this.updateLint(result);
+  }
+
   public async start(): Promise<void | Error> {
     core.startGroup('Run Slack app');
     core.debug('Starting Slack app...');

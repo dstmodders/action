@@ -3,7 +3,6 @@ import fs from 'fs';
 import glob from 'glob';
 import ignore from 'ignore';
 import { AnnotationProperties } from '@actions/core';
-import { Slack } from './slack';
 import { compare, DiffEntry } from './diff';
 
 interface LintAnnotation {
@@ -121,23 +120,6 @@ async function compareToAnnotations(
   return Promise.resolve(issues);
 }
 
-async function updateSlack(result: Lint, slack: Slack): Promise<void> {
-  try {
-    if (slack.isRunning) {
-      if (await slack.update()) {
-        if (result.failed > 0) {
-          core.info('');
-        }
-        core.info('Updated Slack message');
-      }
-      return Promise.resolve();
-    }
-    return Promise.reject();
-  } catch (error) {
-    return Promise.reject(error);
-  }
-}
-
 export {
   Lint,
   LintAnnotation,
@@ -148,5 +130,4 @@ export {
   newEmptyLint,
   print,
   printWarningsForFiles,
-  updateSlack,
 };
