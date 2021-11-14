@@ -196,11 +196,11 @@ class Slack {
     }
 
     if (this.options.run.prettier) {
-      fields.push(Slack.getCheckingField('Prettier issues'));
+      fields.push(Slack.getCheckingField('Prettier passes'));
     }
 
     if (this.options.run.stylua) {
-      fields.push(Slack.getCheckingField('StyLua issues'));
+      fields.push(Slack.getCheckingField('StyLua passes'));
     }
 
     core.debug('Posting Slack message...');
@@ -264,7 +264,7 @@ class Slack {
     if (this.options.run.prettier) {
       fields.push(
         this.isInProgress
-          ? Slack.getCheckingField('Prettier issues')
+          ? Slack.getCheckingField('Prettier passes')
           : Slack.getField(
               'Prettier passes',
               `${this.prettierLint.passed} / ${this.prettierLint.files.length} files`,
@@ -275,7 +275,7 @@ class Slack {
     if (this.options.run.stylua) {
       fields.push(
         this.isInProgress
-          ? Slack.getCheckingField('StyLua issues')
+          ? Slack.getCheckingField('StyLua passes')
           : Slack.getField(
               'StyLua passes',
               `${this.styLuaLint.passed} / ${this.styLuaLint.files.length} files`,
