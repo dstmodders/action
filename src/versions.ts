@@ -5,7 +5,7 @@ import * as luacheck from './luacheck';
 import * as prettier from './prettier';
 import * as stylua from './stylua';
 
-interface Versions {
+export interface Versions {
   busted: string;
   lua: string;
   luacheck: string;
@@ -13,7 +13,7 @@ interface Versions {
   stylua: string;
 }
 
-async function get(): Promise<Versions> {
+export async function get(): Promise<Versions> {
   const versions: Versions = <Versions>{
     busted: '',
     lua: '',
@@ -31,12 +31,10 @@ async function get(): Promise<Versions> {
   return Promise.resolve(versions);
 }
 
-async function setOutput(versions: Versions): Promise<void> {
+export async function setOutput(versions: Versions): Promise<void> {
   core.setOutput('busted-version', versions.lua);
   core.setOutput('lua-version', versions.lua);
   core.setOutput('luacheck-version', versions.luacheck);
   core.setOutput('prettier-version', versions.prettier);
   core.setOutput('stylua-version', versions.stylua);
 }
-
-export { Versions, get, setOutput };

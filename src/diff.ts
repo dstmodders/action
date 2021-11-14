@@ -1,13 +1,13 @@
 import * as Diff from 'diff';
 
-interface DiffChange {
+export interface DiffChange {
   added?: boolean | undefined;
   count: number;
   removed?: boolean | undefined;
   value: string;
 }
 
-interface DiffEntry {
+export interface DiffEntry {
   action: string;
   endLine?: number;
   previousValue?: string;
@@ -15,13 +15,13 @@ interface DiffEntry {
   value: string;
 }
 
-function newEmptyDiffEntries(): DiffEntry[] {
+export function newEmptyDiffEntries(): DiffEntry[] {
   const result: DiffEntry[] = [];
   result.pop();
   return result;
 }
 
-async function compare(original, changed): Promise<DiffEntry[]> {
+export async function compare(original, changed): Promise<DiffEntry[]> {
   const entries = newEmptyDiffEntries();
   const result: DiffChange[] = Diff.diffLines(original, changed);
   const skip: number[] = [];
@@ -74,5 +74,3 @@ async function compare(original, changed): Promise<DiffEntry[]> {
 
   return entries;
 }
-
-export { DiffChange, DiffEntry, compare, newEmptyDiffEntries };

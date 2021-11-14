@@ -1,7 +1,8 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 
-async function getVersion(): Promise<string> {
+// eslint-disable-next-line import/prefer-default-export
+export async function getVersion(): Promise<string> {
   let result: string = '';
 
   try {
@@ -29,6 +30,3 @@ async function getVersion(): Promise<string> {
 
   return result;
 }
-
-// eslint-disable-next-line import/prefer-default-export
-export { getVersion };

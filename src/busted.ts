@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import { Slack } from './slack';
 
-interface Test {
+export interface Test {
   exitCode: number;
   failed: number;
   output: string;
@@ -11,7 +11,7 @@ interface Test {
   total: number;
 }
 
-function newEmptyTest(): Test {
+export function newEmptyTest(): Test {
   return <Test>{
     exitCode: 0,
     failed: 0,
@@ -22,7 +22,7 @@ function newEmptyTest(): Test {
   };
 }
 
-async function getVersion(): Promise<string> {
+export async function getVersion(): Promise<string> {
   let result: string = '';
 
   try {
@@ -47,7 +47,7 @@ async function getVersion(): Promise<string> {
   return result;
 }
 
-async function getNrOfTests(): Promise<number> {
+export async function getNrOfTests(): Promise<number> {
   try {
     let result: number = 0;
     let output: string = '';
@@ -76,7 +76,7 @@ async function getNrOfTests(): Promise<number> {
   }
 }
 
-async function test(): Promise<Test> {
+export async function test(): Promise<Test> {
   const result: Test = newEmptyTest();
 
   try {
@@ -124,7 +124,7 @@ async function test(): Promise<Test> {
   return result;
 }
 
-async function run(slack: Slack | null = null): Promise<Test> {
+export async function run(slack: Slack | null = null): Promise<Test> {
   try {
     const title = 'Busted';
     core.startGroup(`Run ${title}`);
@@ -154,11 +154,9 @@ async function run(slack: Slack | null = null): Promise<Test> {
   }
 }
 
-async function setOutput(t: Test): Promise<void> {
+export async function setOutput(t: Test): Promise<void> {
   core.setOutput('busted-failed', t.failed);
   core.setOutput('busted-output', t.output);
   core.setOutput('busted-passed', t.passed);
   core.setOutput('busted-total', t.total);
 }
-
-export { Test, getNrOfTests, getVersion, newEmptyTest, run, setOutput, test };

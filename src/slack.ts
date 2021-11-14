@@ -4,7 +4,7 @@ import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
 import { Lint, newEmptyLint } from './lint';
 import { Test, newEmptyTest } from './busted';
 
-interface SlackOptions {
+export interface SlackOptions {
   channel: string;
   signingSecret: string;
   token: string;
@@ -22,7 +22,7 @@ interface SlackOptions {
   };
 }
 
-class Slack {
+export class Slack {
   private app: App;
 
   private channelID: string;
@@ -410,5 +410,3 @@ class Slack {
     }
   }
 }
-
-export { Slack, SlackOptions };

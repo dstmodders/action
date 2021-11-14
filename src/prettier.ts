@@ -11,7 +11,7 @@ import {
 } from './lint';
 import { Slack } from './slack';
 
-async function getVersion(): Promise<string> {
+export async function getVersion(): Promise<string> {
   let result: string = '';
 
   try {
@@ -36,7 +36,7 @@ async function getVersion(): Promise<string> {
   return result;
 }
 
-async function lint(): Promise<Lint> {
+export async function lint(): Promise<Lint> {
   const result: Lint = newEmptyLint();
 
   try {
@@ -95,7 +95,7 @@ async function lint(): Promise<Lint> {
   return result;
 }
 
-async function run(slack: Slack | null = null): Promise<Lint> {
+export async function run(slack: Slack | null = null): Promise<Lint> {
   try {
     const title = 'Prettier';
     core.startGroup(`Run ${title}`);
@@ -112,12 +112,10 @@ async function run(slack: Slack | null = null): Promise<Lint> {
   }
 }
 
-async function setOutput(l: Lint): Promise<void> {
+export async function setOutput(l: Lint): Promise<void> {
   core.setOutput('prettier-failed', l.failed);
   core.setOutput('prettier-issues', l.issues);
   core.setOutput('prettier-output', l.output);
   core.setOutput('prettier-passed', l.passed);
   core.setOutput('prettier-total', l.files.length);
 }
-
-export { getVersion, lint, run, setOutput };

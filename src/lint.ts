@@ -5,19 +5,19 @@ import ignore from 'ignore';
 import { AnnotationProperties } from '@actions/core';
 import { compare, DiffEntry } from './diff';
 
-interface LintAnnotation {
+export interface LintAnnotation {
   action?: string;
   message: string;
   properties: AnnotationProperties;
 }
 
-interface LintFile {
+export interface LintFile {
   annotations: [LintAnnotation];
   exitCode: number;
   path: string;
 }
 
-interface Lint {
+export interface Lint {
   failed: number;
   files: LintFile[];
   issues: number;
@@ -25,13 +25,13 @@ interface Lint {
   passed: number;
 }
 
-function newEmptyAnnotations(): [LintAnnotation] {
+export function newEmptyAnnotations(): [LintAnnotation] {
   const result: [LintAnnotation] = [<LintAnnotation>{}];
   result.pop();
   return result;
 }
 
-function newEmptyLint(): Lint {
+export function newEmptyLint(): Lint {
   const result: Lint = {
     failed: 0,
     files: [<LintFile>{}],
@@ -43,7 +43,7 @@ function newEmptyLint(): Lint {
   return result;
 }
 
-function printWarningsForFiles(files: LintFile[], title: string): void {
+export function printWarningsForFiles(files: LintFile[], title: string): void {
   // eslint-disable-next-line no-restricted-syntax
   for (const file of files) {
     if (file.exitCode > 0 && file.annotations.length > 0) {
@@ -72,7 +72,7 @@ function printWarningsForFiles(files: LintFile[], title: string): void {
   }
 }
 
-function print(result: Lint, title: string): void {
+export function print(result: Lint, title: string): void {
   core.info(`Passed ${result.passed} / ${result.files.length} files`);
   if (result.failed > 0) {
     core.info(`Found ${result.issues} issue${result.issues === 1 ? '' : 's'}`);
@@ -82,7 +82,7 @@ function print(result: Lint, title: string): void {
   }
 }
 
-async function getFiles(
+export async function getFiles(
   ignoreFile: string,
   extensions: string,
 ): Promise<string[]> {
@@ -95,7 +95,7 @@ async function getFiles(
   return Promise.resolve(glob.sync(`**/*.${extensions}`));
 }
 
-async function compareToAnnotations(
+export async function compareToAnnotations(
   annotations: [LintAnnotation],
   file: string,
   changed: string,
@@ -119,15 +119,3 @@ async function compareToAnnotations(
   });
   return Promise.resolve(issues);
 }
-
-export {
-  Lint,
-  LintAnnotation,
-  LintFile,
-  compareToAnnotations,
-  getFiles,
-  newEmptyAnnotations,
-  newEmptyLint,
-  print,
-  printWarningsForFiles,
-};
