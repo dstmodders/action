@@ -15,15 +15,17 @@ interface DiffEntry {
   value: string;
 }
 
+function newEmptyDiffEntries(): DiffEntry[] {
+  const result: DiffEntry[] = [];
+  result.pop();
+  return result;
+}
+
 async function compare(original, changed): Promise<DiffEntry[]> {
-  const entries = [<DiffEntry>{}];
-  entries.pop();
-
-  // let isRemoved: boolean = false;
-  let line: number = 1;
-
+  const entries = newEmptyDiffEntries();
   const result: DiffChange[] = Diff.diffLines(original, changed);
   const skip: number[] = [];
+  let line: number = 1;
 
   result.forEach((part, idx) => {
     const nextPart = idx + 1 <= result.length ? result[idx + 1] : null;
@@ -73,4 +75,4 @@ async function compare(original, changed): Promise<DiffEntry[]> {
   return entries;
 }
 
-export { DiffChange, DiffEntry, compare };
+export { DiffChange, DiffEntry, compare, newEmptyDiffEntries };
