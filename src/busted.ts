@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import { Slack } from './slack';
 
 interface Test {
   exitCode: number;
@@ -123,7 +124,7 @@ async function test(): Promise<Test> {
   return result;
 }
 
-async function run(): Promise<Test> {
+async function run(slack: Slack | null = null): Promise<Test> {
   try {
     const title = 'Busted';
     core.startGroup(`Run ${title}`);
@@ -139,6 +140,10 @@ async function run(): Promise<Test> {
 
       core.info('');
       core.info(result.output);
+    }
+
+    if (slack) {
+      await slack.updateBusted(result);
     }
 
     core.endGroup();

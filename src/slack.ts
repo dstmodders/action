@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
 import { Lint, newEmptyLint } from './lint';
+import { Test, newEmptyTest } from './busted';
 
 interface SlackOptions {
   channel: string;
@@ -14,6 +15,7 @@ interface SlackOptions {
     warning: string;
   };
   run: {
+    busted: boolean;
     luacheck: boolean;
     prettier: boolean;
     stylua: boolean;
@@ -30,6 +32,8 @@ class Slack {
   private options: SlackOptions;
 
   private timestamp: string;
+
+  public bustedTest: Test;
 
   public isRunning: boolean;
 
@@ -147,6 +151,7 @@ class Slack {
   }
 
   constructor(options: SlackOptions) {
+    this.bustedTest = newEmptyTest();
     this.channelID = '';
     this.isInProgress = false;
     this.isRunning = false;
@@ -191,6 +196,10 @@ class Slack {
 
     const fields: MrkdwnElement[] = Slack.getGeneralFields('In progress');
 
+    if (this.options.run.busted) {
+      fields.push(Slack.getCheckingField('Busted passes'));
+    }
+
     if (this.options.run.luacheck) {
       fields.push(Slack.getCheckingField('Luacheck issues'));
     }
@@ -229,6 +238,24 @@ class Slack {
     return true;
   }
 
+  private async updateLintOrTest(result: Lint | Test): Promise<void> {
+    if (!this.isRunning) {
+      throw new Error('Slack app is not running');
+    }
+
+    try {
+      if (await this.update()) {
+        if (result.failed > 0) {
+          core.info('');
+        }
+        core.info('Updated Slack message');
+      }
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
   public async update(): Promise<boolean> {
     if (!this.isRunning) {
       throw new Error('Slack app is not running');
@@ -239,7 +266,8 @@ class Slack {
 
     if (
       !this.isInProgress &&
-      (this.luacheckLint.issues > 0 ||
+      (this.bustedTest.failed > 0 ||
+        this.luacheckLint.issues > 0 ||
         this.prettierLint.failed > 0 ||
         this.styLuaLint.failed > 0)
     ) {
@@ -248,6 +276,17 @@ class Slack {
     } else if (!this.isInProgress) {
       color = this.options.colors.success;
       fields = Slack.getGeneralFields('Success');
+    }
+
+    if (this.options.run.busted) {
+      fields.push(
+        this.isInProgress
+          ? Slack.getCheckingField('Busted passes')
+          : Slack.getField(
+              'Busted passes',
+              `${this.bustedTest.passed} / ${this.bustedTest.total} tests`,
+            ),
+      );
     }
 
     if (this.options.run.luacheck) {
@@ -310,37 +349,24 @@ class Slack {
     return true;
   }
 
-  public async updateLint(result: Lint): Promise<void> {
-    if (!this.isRunning) {
-      throw new Error('Slack app is not running');
-    }
-
-    try {
-      if (await this.update()) {
-        if (result.failed > 0) {
-          core.info('');
-        }
-        core.info('Updated Slack message');
-      }
-      return Promise.resolve();
-    } catch (error) {
-      return Promise.reject(error);
-    }
+  public async updateBusted(result: Test): Promise<void> {
+    this.bustedTest = result;
+    return this.updateLintOrTest(result);
   }
 
   public async updateLuacheck(result: Lint): Promise<void> {
     this.luacheckLint = result;
-    return this.updateLint(result);
+    return this.updateLintOrTest(result);
   }
 
   public async updatePrettier(result: Lint): Promise<void> {
     this.prettierLint = result;
-    return this.updateLint(result);
+    return this.updateLintOrTest(result);
   }
 
   public async updateStyLua(result: Lint): Promise<void> {
     this.styLuaLint = result;
-    return this.updateLint(result);
+    return this.updateLintOrTest(result);
   }
 
   public async start(): Promise<void | Error> {

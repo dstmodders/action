@@ -71,6 +71,7 @@ async function run() {
         warning: core.getInput('slack-color-warning'),
       },
       run: {
+        busted: inputBusted,
         luacheck: inputLuacheck,
         prettier: inputPrettier,
         stylua: inputStyLua,
@@ -95,7 +96,7 @@ async function run() {
     }
 
     if (inputBusted) {
-      await busted.run();
+      await busted.run(slack);
     }
 
     if (inputLuacheck) {
