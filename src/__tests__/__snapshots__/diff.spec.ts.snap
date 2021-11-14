@@ -1,0 +1,78 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`diff module compare() when adding should match the snapshot 1`] = `
+Array [
+  Object {
+    "action": "add",
+    "startLine": 3,
+    "value": "Added line after 2nd line
+",
+  },
+  Object {
+    "action": "add",
+    "startLine": 4,
+    "value": "Added line after 3d line
+",
+  },
+  Object {
+    "action": "add",
+    "startLine": 8,
+    "value": "Added line after 7th line
+",
+  },
+]
+`;
+
+exports[`diff module compare() when removing should match the snapshot 1`] = `
+Array [
+  Object {
+    "action": "remove",
+    "startLine": 4,
+    "value": "2nd line
+3d line
+",
+  },
+  Object {
+    "action": "remove",
+    "startLine": 7,
+    "value": "6th line
+",
+  },
+]
+`;
+
+exports[`diff module compare() when replacing should match the snapshot 1`] = `
+Array [
+  Object {
+    "action": "replace",
+    "endLine": 4,
+    "previousValue": "2nd line
+3d line
+",
+    "startLine": 2,
+    "value": "Replaced 2nd line
+Replaced 3d line
+",
+  },
+  Object {
+    "action": "replace",
+    "endLine": 6,
+    "previousValue": "5th line
+",
+    "startLine": 5,
+    "value": "Replaced 5th line
+",
+  },
+  Object {
+    "action": "replace",
+    "endLine": 8,
+    "previousValue": "7th line
+",
+    "startLine": 7,
+    "value": "Replaced 7th line
+",
+  },
+]
+`;
+
+exports[`diff module compare() when unchanged should match the snapshot 1`] = `Array []`;
