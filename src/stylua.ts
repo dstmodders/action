@@ -114,9 +114,10 @@ async function run(slack: Slack | null = null): Promise<Lint> {
 
 async function setOutput(l: Lint): Promise<void> {
   core.setOutput('stylua-failed', l.failed);
+  core.setOutput('stylua-issues', l.issues);
+  core.setOutput('stylua-output', l.output);
   core.setOutput('stylua-passed', l.passed);
   core.setOutput('stylua-total', l.files.length);
-  core.setOutput('stylua-output', l.output);
 }
 
 export { getVersion, lint, run, setOutput };

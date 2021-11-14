@@ -114,9 +114,10 @@ async function run(slack: Slack | null = null): Promise<Lint> {
 
 async function setOutput(l: Lint): Promise<void> {
   core.setOutput('prettier-failed', l.failed);
+  core.setOutput('prettier-issues', l.issues);
+  core.setOutput('prettier-output', l.output);
   core.setOutput('prettier-passed', l.passed);
   core.setOutput('prettier-total', l.files.length);
-  core.setOutput('prettier-output', l.output);
 }
 
 export { getVersion, lint, run, setOutput };

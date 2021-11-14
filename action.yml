@@ -76,6 +76,8 @@ outputs:
     description: 'Number of failed files by Prettier'
   prettier-passed:
     description: 'Number of passed files by Prettier'
+  prettier-issues:
+    description: 'Number of total issues found by Prettier'
   prettier-output:
     description: 'The list of all failed files by Prettier'
 
@@ -85,6 +87,8 @@ outputs:
     description: 'Number of failed files by StyLua'
   stylua-passed:
     description: 'Number of passed files by StyLua'
+  stylua-issues:
+    description: 'Number of total issues found by StyLua'
   stylua-output:
     description: 'The list of all failed files by StyLua'
 runs:
