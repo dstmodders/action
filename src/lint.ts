@@ -74,9 +74,9 @@ function printWarningsForFiles(files: LintFile[], title: string): void {
 }
 
 function print(result: Lint, title: string): void {
+  core.info(`Passed ${result.passed} / ${result.files.length} files`);
   if (result.failed > 0) {
-    core.info(`Failed: ${result.failed}`);
-    core.info(`Passed: ${result.passed}`);
+    core.info(`Found ${result.issues} issue${result.issues === 1 ? '' : 's'}`);
     printWarningsForFiles(result.files, title);
   } else {
     core.info('No issues found');
@@ -100,11 +100,13 @@ async function compareToAnnotations(
   annotations: [LintAnnotation],
   file: string,
   changed: string,
-): Promise<void> {
+): Promise<number> {
   const original: string = fs.readFileSync(file, 'utf8');
   const diffEntries: DiffEntry[] = await compare(original, changed);
+  let issues: number = 0;
   diffEntries.forEach((entry) => {
     if (entry.startLine > 0 && entry.value.length > 0) {
+      issues += 1;
       annotations.push({
         action: entry.action,
         message: entry.value,
@@ -116,7 +118,7 @@ async function compareToAnnotations(
       });
     }
   });
-  return Promise.resolve();
+  return Promise.resolve(issues);
 }
 
 async function updateSlack(result: Lint, slack: Slack): Promise<void> {

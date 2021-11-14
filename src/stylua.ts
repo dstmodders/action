@@ -78,7 +78,7 @@ async function lint(): Promise<Lint> {
         result.output += `${file}\n`;
 
         // eslint-disable-next-line no-await-in-loop
-        await compareToAnnotations(annotations, file, changed);
+        result.issues += await compareToAnnotations(annotations, file, changed);
       }
 
       result.files.push({
