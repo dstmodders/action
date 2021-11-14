@@ -1,37 +1,71 @@
 import * as Diff from 'diff';
 
-interface DiffEntry {
-  line: number;
+interface DiffChange {
+  added?: boolean | undefined;
+  count: number;
+  removed?: boolean | undefined;
   value: string;
-  newValue: string;
+}
+
+interface DiffEntry {
+  action: string;
+  endLine?: number;
+  previousValue?: string;
+  startLine: number;
+  value: string;
 }
 
 async function compare(original, changed): Promise<DiffEntry[]> {
   const entries = [<DiffEntry>{}];
   entries.pop();
 
-  let isRemoved: boolean = false;
+  // let isRemoved: boolean = false;
   let line: number = 1;
-  let removeLine: number = 0;
-  let removeValue: string = '';
 
-  Diff.diffLines(original, changed).forEach((part) => {
+  const result: DiffChange[] = Diff.diffLines(original, changed);
+  const skip: number[] = [];
+
+  result.forEach((part, idx) => {
+    const nextPart = idx + 1 <= result.length ? result[idx + 1] : null;
+
     if (!part.removed && !part.added) {
+      // unchanged
       line += part.count;
-    }
-
-    if (part.removed && !part.added) {
-      isRemoved = true;
-      removeLine = line;
-      removeValue = part.value;
+    } else if (part.removed && !part.added && nextPart) {
+      const removeLine: number = line;
       line += part.count;
-    }
 
-    if (isRemoved && !part.removed && part.added) {
+      if (!nextPart.removed && nextPart.added) {
+        // replaced
+        skip.push(idx + 1);
+        entries.push({
+          action: 'replace',
+          endLine: line,
+          previousValue: part.value,
+          startLine: removeLine,
+          value: nextPart.value,
+        });
+      } else {
+        // removed
+        entries.push({
+          action: 'remove',
+          startLine: line,
+          value: part.value,
+        });
+      }
+    } else if (part.added && !skip.includes(idx)) {
+      // added
       entries.push({
-        line: removeLine,
-        value: removeValue,
-        newValue: part.value,
+        action: 'add',
+        startLine: line,
+        value: part.value,
+      });
+    } else if (part.removed && !part.added) {
+      // removed
+      entries.push({
+        action: 'remove',
+        startLine: line,
+        value: part.value,
       });
     }
   });
@@ -39,4 +73,4 @@ async function compare(original, changed): Promise<DiffEntry[]> {
   return entries;
 }
 
-export { DiffEntry, compare };
+export { DiffChange, DiffEntry, compare };

@@ -84,11 +84,11 @@ async function lint(): Promise<Lint> {
         const diffEntries: DiffEntry[] = await compare(original, changed);
 
         diffEntries.forEach((entry) => {
-          if (entry.line > 0 && entry.newValue.length > 0) {
+          if (entry.startLine > 0 && entry.value.length > 0) {
             annotations.push({
-              message: entry.newValue,
+              message: entry.value,
               properties: <AnnotationProperties>{
-                startLine: entry.line,
+                startLine: entry.startLine,
                 file,
               },
             });
