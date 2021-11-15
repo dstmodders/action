@@ -73,6 +73,9 @@ export function printWarningsForFiles(files: LintFile[], title: string): void {
 }
 
 export function print(result: Lint, title: string): void {
+  if (result.files.length === 0) {
+    return;
+  }
   core.info(`Passed ${result.passed} / ${result.files.length} files`);
   if (result.failed > 0) {
     core.info(`Found ${result.issues} issue${result.issues === 1 ? '' : 's'}`);

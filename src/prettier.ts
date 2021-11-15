@@ -41,12 +41,16 @@ export async function lint(): Promise<Lint> {
 
   try {
     const files = await getFiles('.prettierignore', '{md,xml,yml}');
-    let exitCode: number = 0;
+    if (files.length === 0) {
+      core.info(`No files found`);
+      return result;
+    }
 
     core.info(
       `Checking ${files.length} file${files.length === 1 ? '' : 's'}...`,
     );
 
+    let exitCode: number = 0;
     // eslint-disable-next-line no-restricted-syntax
     for (const file of files) {
       const annotations: [LintAnnotation] = newEmptyAnnotations();
@@ -56,6 +60,8 @@ export async function lint(): Promise<Lint> {
         ignoreReturnCode: true,
         silent: true,
       });
+
+      core.debug(`${file}, exit code ${exitCode}`);
 
       if (exitCode === 0) {
         result.passed += 1;
