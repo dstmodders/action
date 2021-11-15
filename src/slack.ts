@@ -280,14 +280,18 @@ export class Slack {
     }
 
     if (this.options.input.busted) {
-      fields.push(
-        this.isInProgress
-          ? Slack.getCheckingField('Busted passes')
-          : Slack.getField(
-              'Busted passes',
-              `${this.bustedTest.passed} / ${this.bustedTest.total} tests`,
-            ),
-      );
+      if (this.isInProgress) {
+        fields.push(Slack.getCheckingField('Busted passes'));
+      } else if (this.bustedTest.total === 0) {
+        fields.push(Slack.getField('Busted passes', 'No tests'));
+      } else {
+        fields.push(
+          Slack.getField(
+            'Busted passes',
+            `${this.bustedTest.passed} / ${this.bustedTest.total} tests`,
+          ),
+        );
+      }
     }
 
     if (this.options.input.luacheck) {
@@ -302,25 +306,33 @@ export class Slack {
     }
 
     if (this.options.input.prettier) {
-      fields.push(
-        this.isInProgress
-          ? Slack.getCheckingField('Prettier passes')
-          : Slack.getField(
-              'Prettier passes',
-              `${this.prettierLint.passed} / ${this.prettierLint.files.length} files`,
-            ),
-      );
+      if (this.isInProgress) {
+        fields.push(Slack.getCheckingField('Prettier passes'));
+      } else if (this.prettierLint.files.length === 0) {
+        fields.push(Slack.getField('Prettier passes', 'No files'));
+      } else {
+        fields.push(
+          Slack.getField(
+            'Prettier passes',
+            `${this.prettierLint.passed} / ${this.prettierLint.files.length} files`,
+          ),
+        );
+      }
     }
 
     if (this.options.input.stylua) {
-      fields.push(
-        this.isInProgress
-          ? Slack.getCheckingField('StyLua passes')
-          : Slack.getField(
-              'StyLua passes',
-              `${this.styLuaLint.passed} / ${this.styLuaLint.files.length} files`,
-            ),
-      );
+      if (this.isInProgress) {
+        fields.push(Slack.getCheckingField('StyLua passes'));
+      } else if (this.styLuaLint.files.length === 0) {
+        fields.push(Slack.getField('StyLua passes', 'No files'));
+      } else {
+        fields.push(
+          Slack.getField(
+            'StyLua passes',
+            `${this.styLuaLint.passed} / ${this.styLuaLint.files.length} files`,
+          ),
+        );
+      }
     }
 
     core.debug('Updating Slack message...');
