@@ -1,5 +1,7 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import { Slack } from './slack';
+import { Input } from './input';
 import {
   Lint,
   LintAnnotation,
@@ -7,9 +9,8 @@ import {
   getFiles,
   newEmptyAnnotations,
   newEmptyLint,
-  print,
+  printResult,
 } from './lint';
-import { Slack } from './slack';
 
 export async function getVersion(): Promise<string> {
   let result: string = '';
@@ -36,7 +37,7 @@ export async function getVersion(): Promise<string> {
   return result;
 }
 
-export async function lint(): Promise<Lint> {
+export async function lint(input: Input): Promise<Lint> {
   const result: Lint = newEmptyLint();
 
   try {
@@ -94,7 +95,7 @@ export async function lint(): Promise<Lint> {
     }
 
     result.output = result.output.trim();
-    print(result, 'StyLua');
+    printResult(input, result, 'StyLua');
   } catch (error) {
     return Promise.reject(error);
   }
@@ -102,10 +103,13 @@ export async function lint(): Promise<Lint> {
   return result;
 }
 
-export async function run(slack: Slack | null = null): Promise<Lint> {
+export async function run(
+  input: Input,
+  slack: Slack | null = null,
+): Promise<Lint> {
   try {
     core.startGroup('Run StyLua');
-    const result: Lint = await lint();
+    const result: Lint = await lint(input);
     if (slack) {
       await slack.updateStyLua(result);
     }

@@ -86,19 +86,19 @@ async function run() {
     }
 
     if (input.busted) {
-      await busted.run(slack);
+      await busted.run(input, slack);
     }
 
     if (input.luacheck) {
-      await luacheck.run(slack);
+      await luacheck.run(input, slack);
     }
 
     if (input.prettier) {
-      await prettier.run(slack);
+      await prettier.run(input, slack);
     }
 
     if (input.stylua) {
-      await stylua.run(slack);
+      await stylua.run(input, slack);
     }
 
     if (input.slack) {

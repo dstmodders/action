@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import { AnnotationProperties } from '@actions/core';
+import { Input } from './input';
 import { Slack } from './slack';
 import {
   Lint,
@@ -8,7 +9,7 @@ import {
   getFiles,
   newEmptyAnnotations,
   newEmptyLint,
-  print,
+  printResult,
 } from './lint';
 
 export async function getVersion(): Promise<string> {
@@ -37,7 +38,7 @@ export async function getVersion(): Promise<string> {
   return result;
 }
 
-export async function lint(): Promise<Lint> {
+export async function lint(input: Input): Promise<Lint> {
   const result: Lint = newEmptyLint();
 
   try {
@@ -111,7 +112,7 @@ export async function lint(): Promise<Lint> {
     }
 
     result.output = result.output.trim();
-    print(result, 'Luacheck');
+    printResult(input, result, 'Luacheck');
   } catch (error) {
     return Promise.reject(error);
   }
@@ -119,10 +120,13 @@ export async function lint(): Promise<Lint> {
   return result;
 }
 
-export async function run(slack: Slack | null = null): Promise<Lint> {
+export async function run(
+  input: Input,
+  slack: Slack | null = null,
+): Promise<Lint> {
   try {
     core.startGroup('Run Luacheck');
-    const result: Lint = await lint();
+    const result: Lint = await lint(input);
     if (slack) {
       await slack.updateLuacheck(result);
     }

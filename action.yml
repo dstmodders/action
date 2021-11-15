@@ -6,14 +6,22 @@ inputs:
     default: 'false'
     description: 'Run Busted'
     required: false
+
   luacheck:
     default: 'false'
     description: 'Run Luacheck'
     required: false
+
   prettier:
     default: 'false'
     description: 'Run Prettier'
     required: false
+
+  stylua:
+    default: 'false'
+    description: 'Run StyLua'
+    required: false
+
   slack:
     default: 'false'
     description: 'Enable Slack notification'
@@ -34,9 +42,10 @@ inputs:
     default: '#dcad04'
     description: 'Warning color for Slack attachment'
     required: false
-  stylua:
+
+  ignore-failure:
     default: 'false'
-    description: 'Run StyLua'
+    description: 'Ignore failures (action passes even when issues found or tests fail)'
     required: false
 outputs:
   busted-version:

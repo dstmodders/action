@@ -6,8 +6,8 @@ This action for [GitHub Actions][] is designed to run different modding tools
 for [Don't Starve Together][] and is based on our [docker-dst-mod][]. Its main
 purpose is to improve the workflow within our organization.
 
-It supports running [Luacheck][], [Prettier][] and/or [StyLua][] to find code
-issues. It supports [Slack][] notification as well.
+It supports running [Busted][], [Luacheck][], [Prettier][] and/or [StyLua][] to
+find code issues or run tests. It supports [Slack][] notification as well.
 
 ## Usage
 
@@ -25,6 +25,10 @@ issues. It supports [Slack][] notification as well.
     # Run Prettier
     # Default: false
     prettier: true
+
+    # Run StyLua
+    # Default: false
+    stylua: true
 
     # Enable Slack notification
     # Default: false
@@ -46,9 +50,9 @@ issues. It supports [Slack][] notification as well.
     # Default: '#dcad04'
     slack-color-warning: '#dcad04'
 
-    # Run StyLua
+    # Ignore failures (action passes even when issues found or tests fail)
     # Default: false
-    stylua: true
+    ignore-failure: false
   env:
     # Slack channel for sending a notification to
     SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
@@ -64,6 +68,7 @@ issues. It supports [Slack][] notification as well.
 
 Released under the [MIT License](https://opensource.org/licenses/MIT).
 
+[busted]: https://olivinelabs.com/busted/
 [docker-dst-mod]: https://github.com/dstmodders/docker-dst-mod
 [don't starve together]: https://www.klei.com/games/dont-starve-together
 [github actions]: https://github.com/features/actions

@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import { Input } from './input';
 import { Slack } from './slack';
 
 export interface Test {
@@ -76,7 +77,7 @@ export async function getNrOfTests(): Promise<number> {
   }
 }
 
-export async function test(): Promise<Test> {
+export async function test(input: Input): Promise<Test> {
   const result: Test = newEmptyTest();
 
   try {
@@ -125,9 +126,14 @@ export async function test(): Promise<Test> {
     );
 
     if (result.failed > 0) {
-      core.setFailed(
-        `Failed ${result.failed} test${result.failed === 1 ? '' : 's'}`,
-      );
+      const msg = `Failed ${result.failed} test${
+        result.failed === 1 ? '' : 's'
+      }`;
+      if (input.ignoreFailure) {
+        core.info(msg);
+      } else {
+        core.setFailed(msg);
+      }
     } else {
       core.info('No failed tests');
     }
@@ -141,11 +147,14 @@ export async function test(): Promise<Test> {
   return result;
 }
 
-export async function run(slack: Slack | null = null): Promise<Test> {
+export async function run(
+  input: Input,
+  slack: Slack | null = null,
+): Promise<Test> {
   try {
     const title = 'Busted';
     core.startGroup(`Run ${title}`);
-    const result: Test = await test();
+    const result: Test = await test(input);
     if (slack) {
       await slack.updateBusted(result);
     }

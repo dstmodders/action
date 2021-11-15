@@ -3,6 +3,7 @@ import fs from 'fs';
 import glob from 'glob';
 import ignore from 'ignore';
 import { AnnotationProperties } from '@actions/core';
+import { Input } from './input';
 import { compare, DiffEntry } from './diff';
 
 export interface LintAnnotation {
@@ -72,7 +73,7 @@ export function printWarningsForFiles(files: LintFile[], title: string): void {
   }
 }
 
-export function print(result: Lint, title: string): void {
+export function printResult(input: Input, result: Lint, title: string): void {
   if (result.files.length === 0) {
     return;
   }
@@ -84,9 +85,12 @@ export function print(result: Lint, title: string): void {
   );
 
   if (result.failed > 0) {
-    core.setFailed(
-      `Found ${result.issues} issue${result.issues === 1 ? '' : 's'}`,
-    );
+    const msg = `Found ${result.issues} issue${result.issues === 1 ? '' : 's'}`;
+    if (input.ignoreFailure) {
+      core.info(msg);
+    } else {
+      core.setFailed(msg);
+    }
     printWarningsForFiles(result.files, title);
   } else {
     core.info('No issues found');
