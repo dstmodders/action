@@ -9,6 +9,13 @@ purpose is to improve the workflow within our organization.
 It supports running [Busted][], [Luacheck][], [Prettier][] and/or [StyLua][] to
 find code issues or run tests. It supports [Slack][] notification as well.
 
+- [Usage](#usage)
+- [Outputs](#outputs)
+- [Slack notification](#slack-notification)
+  - [1. Add your app](#1-add-your-app)
+  - [2. Enable notification](#2-enable-notification)
+  - [3. Enjoy!](#3-enjoy)
+
 ## Usage
 
 ```yml
@@ -76,6 +83,12 @@ find code issues or run tests. It supports [Slack][] notification as well.
     SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
 ```
 
+## Outputs
+
+The action supports different outputs that you may use for your purposes.
+
+See [action.yml](action.yml) to learn more.
+
 ## Slack notification
 
 The action can send a Slack notification as well.
@@ -136,6 +149,7 @@ For example:
 
 Released under the [MIT License](https://opensource.org/licenses/MIT).
 
+[action.yml]: action.yml
 [busted]: https://olivinelabs.com/busted/
 [docker-dst-mod]: https://github.com/dstmodders/docker-dst-mod
 [don't starve together]: https://www.klei.com/games/dont-starve-together
