@@ -27,7 +27,7 @@ inputs:
     description: 'Enable Slack notification'
     required: false
   slack-color-default:
-    default: '#dcad04' # '#1f242b'
+    default: '#1f242b'
     description: 'Default color for Slack attachment'
     required: false
   slack-color-failure:

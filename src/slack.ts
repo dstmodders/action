@@ -257,19 +257,24 @@ export class Slack {
       throw new Error('Slack app is not running');
     }
 
+    const isFailed =
+      this.bustedTest.failed > 0 ||
+      this.luacheckLint.issues > 0 ||
+      this.prettierLint.failed > 0 ||
+      this.styLuaLint.failed > 0;
+
     let color = this.options.colors.default;
     let fields = Slack.getGeneralFields('In progress');
 
-    if (
-      !this.isInProgress &&
-      (this.bustedTest.failed > 0 ||
-        this.luacheckLint.issues > 0 ||
-        this.prettierLint.failed > 0 ||
-        this.styLuaLint.failed > 0)
-    ) {
-      color = this.options.colors.failure;
-      fields = Slack.getGeneralFields('Failed');
-    } else if (!this.isInProgress) {
+    if (!this.isInProgress && isFailed) {
+      if (this.options.input.ignoreFailure) {
+        color = this.options.colors.warning;
+        fields = Slack.getGeneralFields('Completed');
+      } else {
+        color = this.options.colors.failure;
+        fields = Slack.getGeneralFields('Failed');
+      }
+    } else if (!this.isInProgress && !isFailed) {
       color = this.options.colors.success;
       fields = Slack.getGeneralFields('Success');
     }

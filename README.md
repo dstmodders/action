@@ -35,8 +35,8 @@ find code issues or run tests. It supports [Slack][] notification as well.
     slack: true
 
     # Default color for Slack attachment
-    # Default: '#dcad04'
-    slack-color-default: '#dcad04'
+    # Default: '#1f242b'
+    slack-color-default: '#1f242b'
 
     # Failure color for Slack attachment
     # Default: '#cc1f2d'
