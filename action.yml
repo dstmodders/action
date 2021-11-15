@@ -42,6 +42,18 @@ inputs:
     default: '#dcad04'
     description: 'Warning color for Slack attachment'
     required: false
+  slack-luacheck-format:
+    default: 'issues'
+    description: 'Slack field format for Luacheck: failures|issues|passes'
+    required: false
+  slack-prettier-format:
+    default: 'issues'
+    description: 'Slack field format for Prettier: failures|issues|passes'
+    required: false
+  slack-stylua-format:
+    default: 'issues'
+    description: 'Slack field format for StyLua: failures|issues|passes'
+    required: false
 
   ignore-failure:
     default: 'false'

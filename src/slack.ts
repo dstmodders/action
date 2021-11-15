@@ -201,11 +201,19 @@ export class Slack {
     }
 
     if (this.options.input.prettier) {
-      fields.push(Slack.getCheckingField('Prettier passes'));
+      if (this.options.input.slackPrettierFormat === 'passes') {
+        fields.push(Slack.getCheckingField('Prettier passes'));
+      } else {
+        fields.push(Slack.getCheckingField('Prettier issues'));
+      }
     }
 
     if (this.options.input.stylua) {
-      fields.push(Slack.getCheckingField('StyLua passes'));
+      if (this.options.input.slackStyLuaFormat === 'passes') {
+        fields.push(Slack.getCheckingField('StyLua passes'));
+      } else {
+        fields.push(Slack.getCheckingField('StyLua issues'));
+      }
     }
 
     core.debug('Posting Slack message...');
@@ -232,6 +240,42 @@ export class Slack {
     }
 
     return true;
+  }
+
+  private getLintField(
+    format: string,
+    result: Lint,
+    title: string,
+  ): MrkdwnElement {
+    if (format === 'failures') {
+      if (this.isInProgress) {
+        return Slack.getCheckingField(`${title} failures`);
+      }
+      if (result.files.length === 0) {
+        return Slack.getField(`${title} failures`, 'No files');
+      }
+      return Slack.getField(
+        `${title} failures`,
+        `${result.failed} / ${result.files.length} files`,
+      );
+    }
+
+    if (format === 'passes') {
+      if (this.isInProgress) {
+        return Slack.getCheckingField(`${title} passes`);
+      }
+      if (result.files.length === 0) {
+        return Slack.getField(`${title} passes`, 'No files');
+      }
+      return Slack.getField(
+        `${title} passes`,
+        `${result.passed} / ${result.files.length} files`,
+      );
+    }
+
+    return this.isInProgress
+      ? Slack.getCheckingField(`${title} issues`)
+      : Slack.getField(`${title} issues`, result.issues.toString());
   }
 
   private async updateLintOrTest(result: Lint | Test): Promise<void> {
@@ -263,8 +307,8 @@ export class Slack {
       this.prettierLint.failed > 0 ||
       this.styLuaLint.failed > 0;
 
-    let color = this.options.colors.default;
-    let fields = Slack.getGeneralFields('In progress');
+    let color: string = this.options.colors.default;
+    let fields: MrkdwnElement[] = Slack.getGeneralFields('In progress');
 
     if (!this.isInProgress && isFailed) {
       if (this.options.input.ignoreFailure) {
@@ -296,43 +340,32 @@ export class Slack {
 
     if (this.options.input.luacheck) {
       fields.push(
-        this.isInProgress
-          ? Slack.getCheckingField('Luacheck issues')
-          : Slack.getField(
-              'Luacheck issues',
-              this.luacheckLint.issues.toString(),
-            ),
+        this.getLintField(
+          this.options.input.slackLuacheckFormat,
+          this.luacheckLint,
+          'Luacheck',
+        ),
       );
     }
 
     if (this.options.input.prettier) {
-      if (this.isInProgress) {
-        fields.push(Slack.getCheckingField('Prettier passes'));
-      } else if (this.prettierLint.files.length === 0) {
-        fields.push(Slack.getField('Prettier passes', 'No files'));
-      } else {
-        fields.push(
-          Slack.getField(
-            'Prettier passes',
-            `${this.prettierLint.passed} / ${this.prettierLint.files.length} files`,
-          ),
-        );
-      }
+      fields.push(
+        this.getLintField(
+          this.options.input.slackPrettierFormat,
+          this.prettierLint,
+          'Prettier',
+        ),
+      );
     }
 
     if (this.options.input.stylua) {
-      if (this.isInProgress) {
-        fields.push(Slack.getCheckingField('StyLua passes'));
-      } else if (this.styLuaLint.files.length === 0) {
-        fields.push(Slack.getField('StyLua passes', 'No files'));
-      } else {
-        fields.push(
-          Slack.getField(
-            'StyLua passes',
-            `${this.styLuaLint.passed} / ${this.styLuaLint.files.length} files`,
-          ),
-        );
-      }
+      fields.push(
+        this.getLintField(
+          this.options.input.slackStyLuaFormat,
+          this.styLuaLint,
+          'StyLua',
+        ),
+      );
     }
 
     core.debug('Updating Slack message...');

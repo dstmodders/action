@@ -50,6 +50,18 @@ find code issues or run tests. It supports [Slack][] notification as well.
     # Default: '#dcad04'
     slack-color-warning: '#dcad04'
 
+    # Slack field format for Luacheck: failures|issues|passes
+    # Default: 'issues'
+    slack-luacheck-format: 'issues'
+
+    # Slack field format for Prettier: failures|issues|passes
+    # Default: 'issues'
+    slack-prettier-format: 'issues'
+
+    # Slack field format for StyLua: failures|issues|passes
+    # Default: 'issues'
+    slack-stylua-format: 'issues'
+
     # Ignore failures (action passes even when issues found or tests fail)
     # Default: false
     ignore-failure: false
