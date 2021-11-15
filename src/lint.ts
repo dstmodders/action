@@ -76,9 +76,17 @@ export function print(result: Lint, title: string): void {
   if (result.files.length === 0) {
     return;
   }
-  core.info(`Passed ${result.passed} / ${result.files.length} files`);
+
+  core.info(
+    `Checked ${result.files.length} file${
+      result.files.length === 1 ? '' : 's'
+    }: ${result.passed} passed, ${result.failed} failed`,
+  );
+
   if (result.failed > 0) {
-    core.info(`Found ${result.issues} issue${result.issues === 1 ? '' : 's'}`);
+    core.setFailed(
+      `Found ${result.issues} issue${result.issues === 1 ? '' : 's'}`,
+    );
     printWarningsForFiles(result.files, title);
   } else {
     core.info('No issues found');

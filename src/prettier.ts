@@ -94,6 +94,7 @@ export async function lint(): Promise<Lint> {
     }
 
     result.output = result.output.trim();
+    print(result, 'Prettier');
   } catch (error) {
     return Promise.reject(error);
   }
@@ -103,10 +104,8 @@ export async function lint(): Promise<Lint> {
 
 export async function run(slack: Slack | null = null): Promise<Lint> {
   try {
-    const title = 'Prettier';
-    core.startGroup(`Run ${title}`);
+    core.startGroup('Run Prettier');
     const result: Lint = await lint();
-    print(result, title);
     if (slack) {
       await slack.updatePrettier(result);
     }

@@ -111,6 +111,7 @@ export async function lint(): Promise<Lint> {
     }
 
     result.output = result.output.trim();
+    print(result, 'Luacheck');
   } catch (error) {
     return Promise.reject(error);
   }
@@ -120,10 +121,8 @@ export async function lint(): Promise<Lint> {
 
 export async function run(slack: Slack | null = null): Promise<Lint> {
   try {
-    const title = 'Luacheck';
-    core.startGroup(`Run ${title}`);
+    core.startGroup('Run Luacheck');
     const result: Lint = await lint();
-    print(result, title);
     if (slack) {
       await slack.updateLuacheck(result);
     }

@@ -117,6 +117,23 @@ export async function test(): Promise<Test> {
     result.exitCode = exitCode;
     result.output = output.trim();
     result.total = nrOfTests;
+
+    core.info(
+      `Ran ${nrOfTests} test${nrOfTests === 1 ? '' : 's'}: ${
+        result.passed
+      } passed, ${result.failed} failed`,
+    );
+
+    if (result.failed > 0) {
+      core.setFailed(
+        `Failed ${result.failed} test${result.failed === 1 ? '' : 's'}`,
+      );
+    } else {
+      core.info('No failed tests');
+    }
+
+    core.info('');
+    core.info(result.output);
   } catch (error) {
     return Promise.reject(error);
   }
@@ -129,23 +146,9 @@ export async function run(slack: Slack | null = null): Promise<Test> {
     const title = 'Busted';
     core.startGroup(`Run ${title}`);
     const result: Test = await test();
-
-    if (result.total > 0) {
-      core.info(`Passed ${result.passed} / ${result.total} tests`);
-      if (result.failed > 0) {
-        core.info(`Failed ${result.failed} / ${result.total} tests`);
-      } else {
-        core.info('No failed tests');
-      }
-
-      core.info('');
-      core.info(result.output);
-    }
-
     if (slack) {
       await slack.updateBusted(result);
     }
-
     core.endGroup();
     return result;
   } catch (error) {
