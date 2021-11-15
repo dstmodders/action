@@ -76,6 +76,62 @@ find code issues or run tests. It supports [Slack][] notification as well.
     SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
 ```
 
+## Slack notification
+
+The action can send a Slack notification as well.
+
+![Slack notification](slack-notification.png 'Slack notification')
+
+### 1. Add your app
+
+Go to your [Slack API Apps][] and create/change your own bot. It's pretty
+straightforward and the only thing that you need to know is setting the minimum
+required "Bot Token Scopes" in "OAuth & Permissions":
+
+- `channels:read`
+- `chat:write`
+- `chat:write.public`
+
+![Bot Token Scopes](slack-bot-token-scopes.png 'Bot Token Scopes')
+
+### 2. Enable notification
+
+Add `slack` input set to `true` with all corresponding env variables:
+
+- `SLACK_CHANNEL`
+- `SLACK_SIGNING_SECRET`
+- `SLACK_TOKEN`
+
+For example:
+
+```yml
+- uses: dstmodders/github-action@main
+  with:
+    luacheck: true
+    prettier: true
+    stylua: true
+    slack: true # required
+  env:
+    SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }} # required
+    SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }} # required
+    SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }} # required
+```
+
+```yml
+- uses: dstmodders/github-action@main
+  with:
+    busted: true
+    slack: true # required
+  env:
+    SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }} # required
+    SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }} # required
+    SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }} # required
+```
+
+### 3. Enjoy!
+
+![Slack notifications](slack-notifications.png 'Slack notifications')
+
 ## License
 
 Released under the [MIT License](https://opensource.org/licenses/MIT).
@@ -86,5 +142,6 @@ Released under the [MIT License](https://opensource.org/licenses/MIT).
 [github actions]: https://github.com/features/actions
 [luacheck]: https://github.com/mpeterv/luacheck
 [prettier]: https://prettier.io/
+[slack api apps]: https://api.slack.com/apps/
 [slack]: https://slack.com/
 [stylua]: https://github.com/JohnnyMorganz/StyLua
