@@ -4,6 +4,7 @@ import * as luacheck from './luacheck';
 import * as prettier from './prettier';
 import * as stylua from './stylua';
 import * as versions from './versions';
+import { Input, get as inputGet } from './input';
 import { Lint } from './lint';
 import { Slack } from './slack';
 import { Test } from './busted';
@@ -49,20 +50,11 @@ async function setOutput(
 }
 
 async function run() {
+  let input: Input = <Input>{};
   let slack: Slack | null = null;
-  let inputBusted: boolean = false;
-  let inputLuacheck: boolean = false;
-  let inputPrettier: boolean = false;
-  let inputSlack: boolean = false;
-  let inputStyLua: boolean = false;
 
   try {
-    inputBusted = core.getBooleanInput('busted');
-    inputLuacheck = core.getBooleanInput('luacheck');
-    inputPrettier = core.getBooleanInput('prettier');
-    inputSlack = core.getBooleanInput('slack');
-    inputStyLua = core.getBooleanInput('stylua');
-
+    input = await inputGet();
     slack = new Slack({
       channel: await getEnv('SLACK_CHANNEL', true),
       signingSecret: await getEnv('SLACK_SIGNING_SECRET', true),
@@ -73,12 +65,7 @@ async function run() {
         success: core.getInput('slack-color-success'),
         warning: core.getInput('slack-color-warning'),
       },
-      run: {
-        busted: inputBusted,
-        luacheck: inputLuacheck,
-        prettier: inputPrettier,
-        stylua: inputStyLua,
-      },
+      input,
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -94,27 +81,27 @@ async function run() {
   try {
     const v: versions.Versions = await checkVersions();
 
-    if (inputSlack) {
+    if (input.slack) {
       await slack.start();
     }
 
-    if (inputBusted) {
+    if (input.busted) {
       await busted.run(slack);
     }
 
-    if (inputLuacheck) {
+    if (input.luacheck) {
       await luacheck.run(slack);
     }
 
-    if (inputPrettier) {
+    if (input.prettier) {
       await prettier.run(slack);
     }
 
-    if (inputStyLua) {
+    if (input.stylua) {
       await stylua.run(slack);
     }
 
-    if (inputSlack) {
+    if (input.slack) {
       await slack.stop();
     }
 
@@ -126,7 +113,7 @@ async function run() {
       slack.styLuaLint,
     );
   } catch (error) {
-    if (inputSlack) {
+    if (input.slack) {
       await slack.stop();
     }
 

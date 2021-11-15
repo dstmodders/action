@@ -1,11 +1,13 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
+import { Input } from './input';
 import { Lint, newEmptyLint } from './lint';
 import { Test, newEmptyTest } from './busted';
 
 export interface SlackOptions {
   channel: string;
+  input: Input;
   signingSecret: string;
   token: string;
   colors: {
@@ -13,12 +15,6 @@ export interface SlackOptions {
     failure: string;
     success: string;
     warning: string;
-  };
-  run: {
-    busted: boolean;
-    luacheck: boolean;
-    prettier: boolean;
-    stylua: boolean;
   };
 }
 
@@ -196,19 +192,19 @@ export class Slack {
 
     const fields: MrkdwnElement[] = Slack.getGeneralFields('In progress');
 
-    if (this.options.run.busted) {
+    if (this.options.input.busted) {
       fields.push(Slack.getCheckingField('Busted passes'));
     }
 
-    if (this.options.run.luacheck) {
+    if (this.options.input.luacheck) {
       fields.push(Slack.getCheckingField('Luacheck issues'));
     }
 
-    if (this.options.run.prettier) {
+    if (this.options.input.prettier) {
       fields.push(Slack.getCheckingField('Prettier passes'));
     }
 
-    if (this.options.run.stylua) {
+    if (this.options.input.stylua) {
       fields.push(Slack.getCheckingField('StyLua passes'));
     }
 
@@ -278,7 +274,7 @@ export class Slack {
       fields = Slack.getGeneralFields('Success');
     }
 
-    if (this.options.run.busted) {
+    if (this.options.input.busted) {
       fields.push(
         this.isInProgress
           ? Slack.getCheckingField('Busted passes')
@@ -289,7 +285,7 @@ export class Slack {
       );
     }
 
-    if (this.options.run.luacheck) {
+    if (this.options.input.luacheck) {
       fields.push(
         this.isInProgress
           ? Slack.getCheckingField('Luacheck issues')
@@ -300,7 +296,7 @@ export class Slack {
       );
     }
 
-    if (this.options.run.prettier) {
+    if (this.options.input.prettier) {
       fields.push(
         this.isInProgress
           ? Slack.getCheckingField('Prettier passes')
@@ -311,7 +307,7 @@ export class Slack {
       );
     }
 
-    if (this.options.run.stylua) {
+    if (this.options.input.stylua) {
       fields.push(
         this.isInProgress
           ? Slack.getCheckingField('StyLua passes')
