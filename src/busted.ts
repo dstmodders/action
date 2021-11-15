@@ -130,7 +130,7 @@ export async function test(input: Input): Promise<Test> {
         result.failed === 1 ? '' : 's'
       }`;
       if (input.ignoreFailure) {
-        core.info(msg);
+        core.warning(msg);
       } else {
         core.setFailed(msg);
       }

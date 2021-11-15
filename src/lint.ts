@@ -87,7 +87,7 @@ export function printResult(input: Input, result: Lint, title: string): void {
   if (result.failed > 0) {
     const msg = `Found ${result.issues} issue${result.issues === 1 ? '' : 's'}`;
     if (input.ignoreFailure) {
-      core.info(msg);
+      core.warning(msg);
     } else {
       core.setFailed(msg);
     }
