@@ -87,6 +87,13 @@ outputs:
   busted-output:
     description: 'Busted output'
 
+  ldoc-exit-code:
+    description: 'Exit code of LDoc'
+  ldoc-stderr:
+    description: 'Standard error of LDoc'
+  ldoc-stdout:
+    description: 'Standard output of LDoc'
+
   luacheck-total:
     description: 'Number of total files checked by Luacheck'
   luacheck-failed:

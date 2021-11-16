@@ -10,6 +10,7 @@ import {
   newEmptyAnnotations,
   newEmptyLint,
   printResult,
+  setOutput as outputSet,
 } from './lint';
 
 export async function getVersion(): Promise<string> {
@@ -139,9 +140,5 @@ export async function run(
 }
 
 export async function setOutput(l: Lint): Promise<void> {
-  core.setOutput('luacheck-failed', l.failed);
-  core.setOutput('luacheck-issues', l.issues);
-  core.setOutput('luacheck-output', l.output);
-  core.setOutput('luacheck-passed', l.passed);
-  core.setOutput('luacheck-total', l.files.length);
+  await outputSet('luacheck', l);
 }

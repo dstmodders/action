@@ -4,15 +4,16 @@ import { Input } from './input';
 import { Slack } from './slack';
 
 export interface LDoc {
-  error: string;
   exitCode: number;
-  output: string;
+  stderr: string;
+  stdout: string;
 }
 
 export function newEmptyLDoc(): LDoc {
   return <LDoc>{
     exitCode: 0,
-    output: '',
+    stderr: '',
+    stdout: '',
   };
 }
 
@@ -20,7 +21,7 @@ export async function getVersion(): Promise<string> {
   let result: string = '';
 
   try {
-    let error: string = '';
+    let stderr: string = '';
 
     core.debug(`Getting LDoc version...`);
     await exec.exec('ldoc', [], {
@@ -28,12 +29,12 @@ export async function getVersion(): Promise<string> {
       silent: true,
       listeners: {
         stderr: (data: Buffer) => {
-          error += data.toString();
+          stderr += data.toString();
         },
       },
     });
 
-    const matches: RegExpMatchArray | null = error.match(
+    const matches: RegExpMatchArray | null = stderr.match(
       /(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm,
     );
 
@@ -55,32 +56,32 @@ export async function generate(input: Input): Promise<LDoc> {
   try {
     core.info('Generating LDoc documentation...');
 
-    let output: string = '';
-    let error: string = '';
+    let stderr: string = '';
+    let stdout: string = '';
     const exitCode: number = await exec.exec('ldoc', ['.'], {
       ignoreReturnCode: true,
       silent: true,
       listeners: {
         stderr: (data: Buffer) => {
-          error += data.toString();
+          stderr += data.toString();
         },
         stdout: (data: Buffer) => {
-          output += data.toString();
+          stdout += data.toString();
         },
       },
     });
 
     core.debug(`exit code ${exitCode}`);
 
-    result.error = error.trim();
     result.exitCode = exitCode;
-    result.output = output.trim();
+    result.stderr = stderr.trim();
+    result.stdout = stdout.trim();
 
     if (exitCode === 0) {
       core.info('Generated LDoc documentation');
-      if (result.output.length > 0) {
+      if (result.stdout.length > 0) {
         core.info('');
-        core.info(result.output);
+        core.info(result.stdout);
       }
     } else {
       const msg = 'Failed to generate LDoc documentation';
@@ -90,19 +91,19 @@ export async function generate(input: Input): Promise<LDoc> {
         core.setFailed(msg);
       }
 
-      if (result.error.length > 0 || result.output.length > 0) {
+      if (result.stderr.length > 0 || result.stdout.length > 0) {
         core.info('');
       }
 
-      if (result.output.length > 0) {
-        core.info(result.output);
+      if (result.stdout.length > 0) {
+        core.info(result.stdout);
       }
 
-      if (result.error.length > 0) {
+      if (result.stderr.length > 0) {
         if (input.ignoreFailure) {
-          core.warning(result.error);
+          core.warning(result.stderr);
         } else {
-          core.setFailed(result.error);
+          core.setFailed(result.stderr);
         }
       }
     }
@@ -129,4 +130,10 @@ export async function run(
     core.endGroup();
     return Promise.reject(error);
   }
+}
+
+export async function setOutput(ldoc: LDoc): Promise<void> {
+  core.setOutput('ldoc-exit-code', ldoc.exitCode);
+  core.setOutput('ldoc-stderr', ldoc.stderr);
+  core.setOutput('ldoc-stdout', ldoc.stdout);
 }

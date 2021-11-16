@@ -10,6 +10,7 @@ import {
   newEmptyAnnotations,
   newEmptyLint,
   printResult,
+  setOutput as outputSet,
 } from './lint';
 
 export async function getVersion(): Promise<string> {
@@ -122,9 +123,5 @@ export async function run(
 }
 
 export async function setOutput(l: Lint): Promise<void> {
-  core.setOutput('prettier-failed', l.failed);
-  core.setOutput('prettier-issues', l.issues);
-  core.setOutput('prettier-output', l.output);
-  core.setOutput('prettier-passed', l.passed);
-  core.setOutput('prettier-total', l.files.length);
+  await outputSet('prettier', l);
 }

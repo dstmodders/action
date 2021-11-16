@@ -10,6 +10,7 @@ import {
   newEmptyAnnotations,
   newEmptyLint,
   printResult,
+  setOutput as outputSet,
 } from './lint';
 
 export async function getVersion(): Promise<string> {
@@ -122,9 +123,5 @@ export async function run(
 }
 
 export async function setOutput(l: Lint): Promise<void> {
-  core.setOutput('stylua-failed', l.failed);
-  core.setOutput('stylua-issues', l.issues);
-  core.setOutput('stylua-output', l.output);
-  core.setOutput('stylua-passed', l.passed);
-  core.setOutput('stylua-total', l.files.length);
+  await outputSet('stylua', l);
 }

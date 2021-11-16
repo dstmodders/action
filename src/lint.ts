@@ -134,3 +134,11 @@ export async function compareToAnnotations(
   });
   return Promise.resolve(issues);
 }
+
+export async function setOutput(name: string, l: Lint): Promise<void> {
+  core.setOutput(`${name}-failed`, l.failed);
+  core.setOutput(`${name}-issues`, l.issues);
+  core.setOutput(`${name}-output`, l.output);
+  core.setOutput(`${name}-passed`, l.passed);
+  core.setOutput(`${name}-total`, l.files.length);
+}

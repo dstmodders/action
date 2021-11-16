@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as busted from './busted';
+import * as ldoc from './ldoc';
 import * as luacheck from './luacheck';
 import * as prettier from './prettier';
 import * as stylua from './stylua';
@@ -26,6 +27,10 @@ export async function set(input: Input, output: Output): Promise<void> {
 
   if (input.busted) {
     await busted.setOutput(output.busted);
+  }
+
+  if (input.ldoc) {
+    await ldoc.setOutput(output.ldoc);
   }
 
   if (input.luacheck) {
