@@ -25,6 +25,10 @@ find code issues or run tests. It supports [Slack][] notification as well.
     # Default: false
     busted: true
 
+    # Run LDoc
+    # Default: false
+    ldoc: true
+
     # Run Luacheck
     # Default: false
     luacheck: true

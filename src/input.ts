@@ -3,6 +3,7 @@ import * as core from '@actions/core';
 export interface Input {
   busted: boolean;
   ignoreFailure: boolean;
+  ldoc: boolean;
   luacheck: boolean;
   prettier: boolean;
   slack: boolean;
@@ -33,6 +34,7 @@ export async function get(): Promise<Input> {
     const input: Input = <Input>{};
     input.busted = core.getBooleanInput('busted');
     input.ignoreFailure = core.getBooleanInput('ignore-failure');
+    input.ldoc = core.getBooleanInput('ldoc');
     input.luacheck = core.getBooleanInput('luacheck');
     input.prettier = core.getBooleanInput('prettier');
     input.slack = core.getBooleanInput('slack');

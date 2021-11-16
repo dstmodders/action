@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as busted from './busted';
+import * as ldoc from './ldoc';
 import * as luacheck from './luacheck';
 import * as prettier from './prettier';
 import * as stylua from './stylua';
@@ -88,6 +89,10 @@ async function run() {
 
     if (input.busted) {
       await busted.run(input, slack);
+    }
+
+    if (input.ldoc) {
+      await ldoc.run(input, slack);
     }
 
     if (input.luacheck) {

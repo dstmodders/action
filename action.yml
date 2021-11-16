@@ -7,6 +7,11 @@ inputs:
     description: 'Run Busted'
     required: false
 
+  ldoc:
+    default: 'false'
+    description: 'Run LDoc'
+    required: false
+
   luacheck:
     default: 'false'
     description: 'Run Luacheck'

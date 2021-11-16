@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
 import { Input } from './input';
+import { LDoc, newEmptyLDoc } from './ldoc';
 import { Lint, newEmptyLint } from './lint';
 import { Test, newEmptyTest } from './busted';
 
@@ -32,6 +33,8 @@ export class Slack {
   public bustedTest: Test;
 
   public isRunning: boolean;
+
+  public ldoc: LDoc;
 
   public luacheckLint: Lint;
 
@@ -98,8 +101,11 @@ export class Slack {
     };
   }
 
-  private static getCheckingField(title: string): MrkdwnElement {
-    return this.getField(title, 'Checking...');
+  private static getCheckingField(
+    title: string,
+    value: string = 'Checking...',
+  ): MrkdwnElement {
+    return this.getField(title, value);
   }
 
   private static getGeneralFields(status: string): MrkdwnElement[] {
@@ -151,6 +157,7 @@ export class Slack {
     this.channelID = '';
     this.isInProgress = false;
     this.isRunning = false;
+    this.ldoc = newEmptyLDoc();
     this.luacheckLint = newEmptyLint();
     this.options = options;
     this.prettierLint = newEmptyLint();
@@ -194,6 +201,10 @@ export class Slack {
 
     if (this.options.input.busted) {
       fields.push(Slack.getCheckingField('Busted passes'));
+    }
+
+    if (this.options.input.ldoc) {
+      fields.push(Slack.getCheckingField('LDoc', 'Generating...'));
     }
 
     if (this.options.input.luacheck) {
@@ -240,6 +251,15 @@ export class Slack {
     }
 
     return true;
+  }
+
+  private getLDocField(): MrkdwnElement {
+    if (this.isInProgress) {
+      return Slack.getCheckingField('LDoc', 'Generating...');
+    }
+    return this.ldoc.exitCode === 0
+      ? Slack.getField('LDoc', 'Success')
+      : Slack.getField('LDoc', 'Failed');
   }
 
   private getLintField(
@@ -303,6 +323,7 @@ export class Slack {
 
     const isFailed =
       this.bustedTest.failed > 0 ||
+      this.ldoc.exitCode > 0 ||
       this.luacheckLint.issues > 0 ||
       this.prettierLint.failed > 0 ||
       this.styLuaLint.failed > 0;
@@ -336,6 +357,10 @@ export class Slack {
           ),
         );
       }
+    }
+
+    if (this.options.input.ldoc) {
+      fields.push(this.getLDocField());
     }
 
     if (this.options.input.luacheck) {
@@ -398,6 +423,24 @@ export class Slack {
   public async updateBusted(result: Test): Promise<void> {
     this.bustedTest = result;
     return this.updateLintOrTest(result);
+  }
+
+  public async updateLDoc(result: LDoc): Promise<void> {
+    this.ldoc = result;
+
+    if (!this.isRunning) {
+      throw new Error('Slack app is not running');
+    }
+
+    try {
+      if (await this.update()) {
+        core.info('');
+        core.info('Updated Slack message');
+      }
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
+    }
   }
 
   public async updateLuacheck(result: Lint): Promise<void> {
