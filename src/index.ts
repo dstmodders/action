@@ -6,9 +6,8 @@ import * as prettier from './prettier';
 import * as stylua from './stylua';
 import * as versions from './versions';
 import { Input, get as inputGet } from './input';
-import { Lint } from './lint';
+import { Output, set as outputSet } from './output';
 import { Slack } from './slack';
-import { Test } from './busted';
 
 async function getEnv(
   name: string,
@@ -35,23 +34,8 @@ async function checkVersions(): Promise<versions.Versions> {
   return Promise.resolve(v);
 }
 
-async function setOutput(
-  v: versions.Versions,
-  bustedTest: Test,
-  luacheckLint: Lint,
-  prettierLint: Lint,
-  styLuaLint: Lint,
-): Promise<void> {
-  core.startGroup('Set output');
-  await versions.setOutput(v);
-  await busted.setOutput(bustedTest);
-  await luacheck.setOutput(luacheckLint);
-  await prettier.setOutput(prettierLint);
-  await stylua.setOutput(styLuaLint);
-  core.endGroup();
-}
-
 async function run() {
+  const output: Output = <Output>{};
   let input: Input = <Input>{};
   let slack: Slack | null = null;
 
@@ -81,43 +65,37 @@ async function run() {
   }
 
   try {
-    const v: versions.Versions = await checkVersions();
+    output.versions = await checkVersions();
 
     if (input.slack) {
       await slack.start();
     }
 
     if (input.busted) {
-      await busted.run(input, slack);
+      output.busted = await busted.run(input, slack);
     }
 
     if (input.ldoc) {
-      await ldoc.run(input, slack);
+      output.ldoc = await ldoc.run(input, slack);
     }
 
     if (input.luacheck) {
-      await luacheck.run(input, slack);
+      output.luacheck = await luacheck.run(input, slack);
     }
 
     if (input.prettier) {
-      await prettier.run(input, slack);
+      output.prettier = await prettier.run(input, slack);
     }
 
     if (input.stylua) {
-      await stylua.run(input, slack);
+      output.stylua = await stylua.run(input, slack);
     }
 
     if (input.slack) {
       await slack.stop();
     }
 
-    await setOutput(
-      v,
-      slack.bustedTest,
-      slack.luacheckLint,
-      slack.prettierLint,
-      slack.styLuaLint,
-    );
+    await outputSet(input, output);
   } catch (error) {
     if (input.slack) {
       await slack.stop();
