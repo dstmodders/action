@@ -108,6 +108,22 @@ export class Slack {
     return this.getField(title, value);
   }
 
+  private static getCheckingLintField(
+    format: string,
+    name: string,
+    value: string = 'Checking...',
+  ): MrkdwnElement {
+    if (format === 'failures') {
+      return Slack.getCheckingField(`${name} failures`, value);
+    }
+
+    if (format === 'passes') {
+      return Slack.getCheckingField(`${name} passes`, value);
+    }
+
+    return Slack.getCheckingField(`${name} issues`, value);
+  }
+
   private static getGeneralFields(status: string): MrkdwnElement[] {
     const { eventName, issue, serverUrl, sha } = github.context;
     const { owner, repo } = github.context.repo;
@@ -208,23 +224,30 @@ export class Slack {
     }
 
     if (this.options.input.luacheck) {
-      fields.push(Slack.getCheckingField('Luacheck issues'));
+      fields.push(
+        Slack.getCheckingLintField(
+          this.options.input.slackLuacheckFormat,
+          'Luacheck',
+        ),
+      );
     }
 
     if (this.options.input.prettier) {
-      if (this.options.input.slackPrettierFormat === 'passes') {
-        fields.push(Slack.getCheckingField('Prettier passes'));
-      } else {
-        fields.push(Slack.getCheckingField('Prettier issues'));
-      }
+      fields.push(
+        Slack.getCheckingLintField(
+          this.options.input.slackPrettierFormat,
+          'Prettier',
+        ),
+      );
     }
 
     if (this.options.input.stylua) {
-      if (this.options.input.slackStyLuaFormat === 'passes') {
-        fields.push(Slack.getCheckingField('StyLua passes'));
-      } else {
-        fields.push(Slack.getCheckingField('StyLua issues'));
-      }
+      fields.push(
+        Slack.getCheckingLintField(
+          this.options.input.slackStyLuaFormat,
+          'StyLua',
+        ),
+      );
     }
 
     core.debug('Posting Slack message...');
@@ -267,10 +290,11 @@ export class Slack {
     result: Lint,
     title: string,
   ): MrkdwnElement {
+    if (this.isInProgress) {
+      return Slack.getCheckingLintField(format, title);
+    }
+
     if (format === 'failures') {
-      if (this.isInProgress) {
-        return Slack.getCheckingField(`${title} failures`);
-      }
       if (result.files.length === 0) {
         return Slack.getField(`${title} failures`, 'No files');
       }
@@ -281,9 +305,6 @@ export class Slack {
     }
 
     if (format === 'passes') {
-      if (this.isInProgress) {
-        return Slack.getCheckingField(`${title} passes`);
-      }
       if (result.files.length === 0) {
         return Slack.getField(`${title} passes`, 'No files');
       }
@@ -293,9 +314,7 @@ export class Slack {
       );
     }
 
-    return this.isInProgress
-      ? Slack.getCheckingField(`${title} issues`)
-      : Slack.getField(`${title} issues`, result.issues.toString());
+    return Slack.getField(`${title} issues`, result.issues.toString());
   }
 
   private async updateLintOrTest(result: Lint | Test): Promise<void> {
