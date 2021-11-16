@@ -19,6 +19,14 @@ export interface SlackOptions {
   };
 }
 
+export const status = {
+  CANCELLED: 'cancelled',
+  FAILURE: 'failure',
+  IN_PROGRESS: 'in-progress',
+  SKIPPED: 'skipped',
+  SUCCESS: 'success',
+};
+
 export class Slack {
   private app: App;
 
@@ -27,6 +35,8 @@ export class Slack {
   private isInProgress: boolean;
 
   private options: SlackOptions;
+
+  private status: string;
 
   private timestamp: string;
 
@@ -55,7 +65,6 @@ export class Slack {
     const { owner, repo } = github.context.repo;
 
     const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
-
     let branchName: string = '';
     let result: string = '';
     let url: string = '';
@@ -113,18 +122,17 @@ export class Slack {
     name: string,
     value: string = 'Checking...',
   ): MrkdwnElement {
-    if (format === 'failures') {
-      return Slack.getCheckingField(`${name} failures`, value);
+    switch (format) {
+      case 'failures':
+        return Slack.getCheckingField(`${name} failures`, value);
+      case 'passes':
+        return Slack.getCheckingField(`${name} passes`, value);
+      default:
+        return Slack.getCheckingField(`${name} issues`, value);
     }
-
-    if (format === 'passes') {
-      return Slack.getCheckingField(`${name} passes`, value);
-    }
-
-    return Slack.getCheckingField(`${name} issues`, value);
   }
 
-  private static getGeneralFields(status: string): MrkdwnElement[] {
+  private static getRefField(): MrkdwnElement {
     const { eventName, issue, serverUrl, sha } = github.context;
     const { owner, repo } = github.context.repo;
 
@@ -132,40 +140,29 @@ export class Slack {
     const commitUrl: string = `${repoUrl}/commit/${sha}`;
     let url: string = '';
 
-    const statusField: MrkdwnElement = {
-      type: 'mrkdwn',
-      text: `*Status*\n${status}`,
-    };
-
-    let refField: MrkdwnElement = {
-      type: 'mrkdwn',
-      text: `*Commit*\n<${commitUrl}|\`${sha.substring(0, 7)}\`>`,
-    };
+    const refField: MrkdwnElement = Slack.getField(
+      'Commit',
+      `<${commitUrl}|\`${sha.substring(0, 7)}\`>`,
+    );
 
     switch (eventName) {
       case 'pull_request':
         if (issue.number > 0) {
           url = `${repoUrl}/pull/${issue.number}`;
-          refField = {
-            type: 'mrkdwn',
-            text: `*Pull Request*\n<${url}|#${issue.number}>`,
-          };
+          return Slack.getField('Pull Request', `<${url}|#${issue.number}>`);
         }
-        break;
+        return refField;
       case 'push':
-        refField = {
-          type: 'mrkdwn',
-          text: `*Commit*\n<${commitUrl}|\`${sha.substring(
+        return Slack.getField(
+          'Commit',
+          `<${commitUrl}|\`${sha.substring(
             0,
             7,
-          )} (${this.getBranchName()})\`>`,
-        };
-        break;
+          )} (${Slack.getBranchName()})\`>`,
+        );
       default:
-        break;
+        return refField;
     }
-
-    return [statusField, refField];
   }
 
   constructor(options: SlackOptions) {
@@ -177,6 +174,7 @@ export class Slack {
     this.luacheckLint = newEmptyLint();
     this.options = options;
     this.prettierLint = newEmptyLint();
+    this.status = status.IN_PROGRESS;
     this.styLuaLint = newEmptyLint();
     this.timestamp = '';
 
@@ -184,6 +182,44 @@ export class Slack {
       signingSecret: options.signingSecret,
       token: options.token,
     });
+  }
+
+  private getStatusColor(): string {
+    switch (this.status) {
+      case status.SUCCESS:
+        return this.options.colors.success;
+      case status.FAILURE:
+        if (this.options.input.ignoreFailure) {
+          return this.options.colors.warning;
+        }
+        return this.options.colors.failure;
+      default:
+        return this.options.colors.default;
+    }
+  }
+
+  private getStatusField(): MrkdwnElement {
+    switch (this.status) {
+      case status.IN_PROGRESS:
+        return Slack.getField('Status', 'In progress');
+      case status.SUCCESS:
+        return Slack.getField('Status', 'Success');
+      case status.FAILURE:
+        if (this.options.input.ignoreFailure) {
+          return Slack.getField('Status', 'Completed');
+        }
+        return Slack.getField('Status', 'Failure');
+      case status.CANCELLED:
+        return Slack.getField('Status', 'Cancelled');
+      case status.SKIPPED:
+        return Slack.getField('Status', 'Skipped');
+      default:
+        return Slack.getField('Status', 'Error');
+    }
+  }
+
+  private getGeneralFields(): MrkdwnElement[] {
+    return [this.getStatusField(), Slack.getRefField()];
   }
 
   private async findChannel(name: string) {
@@ -208,12 +244,71 @@ export class Slack {
     return result;
   }
 
+  private getLDocField(): MrkdwnElement {
+    if (this.isInProgress) {
+      return Slack.getCheckingField('LDoc', 'Generating...');
+    }
+    return this.ldoc.exitCode === 0
+      ? Slack.getField('LDoc', 'Success')
+      : Slack.getField('LDoc', 'Failed');
+  }
+
+  private getLintField(
+    format: string,
+    result: Lint,
+    title: string,
+  ): MrkdwnElement {
+    if (this.isInProgress) {
+      return Slack.getCheckingLintField(format, title);
+    }
+
+    if (format === 'failures') {
+      if (result.files.length === 0) {
+        return Slack.getField(`${title} failures`, 'No files');
+      }
+      return Slack.getField(
+        `${title} failures`,
+        `${result.failed} / ${result.files.length} files`,
+      );
+    }
+
+    if (format === 'passes') {
+      if (result.files.length === 0) {
+        return Slack.getField(`${title} passes`, 'No files');
+      }
+      return Slack.getField(
+        `${title} passes`,
+        `${result.passed} / ${result.files.length} files`,
+      );
+    }
+
+    return Slack.getField(`${title} issues`, result.issues.toString());
+  }
+
+  private async updateLintOrTest(result: Lint | Test): Promise<void> {
+    if (!this.isRunning) {
+      throw new Error('Slack app is not running');
+    }
+
+    try {
+      if (await this.update()) {
+        if (result.failed > 0) {
+          core.info('');
+        }
+        core.info('Updated Slack message');
+      }
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
   private async post(): Promise<boolean> {
     if (!this.isRunning) {
       throw new Error('Slack app is not running');
     }
 
-    const fields: MrkdwnElement[] = Slack.getGeneralFields('In progress');
+    const fields: MrkdwnElement[] = this.getGeneralFields();
 
     if (this.options.input.busted) {
       fields.push(Slack.getCheckingField('Busted passes'));
@@ -276,65 +371,6 @@ export class Slack {
     return true;
   }
 
-  private getLDocField(): MrkdwnElement {
-    if (this.isInProgress) {
-      return Slack.getCheckingField('LDoc', 'Generating...');
-    }
-    return this.ldoc.exitCode === 0
-      ? Slack.getField('LDoc', 'Success')
-      : Slack.getField('LDoc', 'Failed');
-  }
-
-  private getLintField(
-    format: string,
-    result: Lint,
-    title: string,
-  ): MrkdwnElement {
-    if (this.isInProgress) {
-      return Slack.getCheckingLintField(format, title);
-    }
-
-    if (format === 'failures') {
-      if (result.files.length === 0) {
-        return Slack.getField(`${title} failures`, 'No files');
-      }
-      return Slack.getField(
-        `${title} failures`,
-        `${result.failed} / ${result.files.length} files`,
-      );
-    }
-
-    if (format === 'passes') {
-      if (result.files.length === 0) {
-        return Slack.getField(`${title} passes`, 'No files');
-      }
-      return Slack.getField(
-        `${title} passes`,
-        `${result.passed} / ${result.files.length} files`,
-      );
-    }
-
-    return Slack.getField(`${title} issues`, result.issues.toString());
-  }
-
-  private async updateLintOrTest(result: Lint | Test): Promise<void> {
-    if (!this.isRunning) {
-      throw new Error('Slack app is not running');
-    }
-
-    try {
-      if (await this.update()) {
-        if (result.failed > 0) {
-          core.info('');
-        }
-        core.info('Updated Slack message');
-      }
-      return Promise.resolve();
-    } catch (error) {
-      return Promise.reject(error);
-    }
-  }
-
   public async update(): Promise<boolean> {
     if (!this.isRunning) {
       throw new Error('Slack app is not running');
@@ -347,21 +383,13 @@ export class Slack {
       this.prettierLint.failed > 0 ||
       this.styLuaLint.failed > 0;
 
-    let color: string = this.options.colors.default;
-    let fields: MrkdwnElement[] = Slack.getGeneralFields('In progress');
-
     if (!this.isInProgress && isFailed) {
-      if (this.options.input.ignoreFailure) {
-        color = this.options.colors.warning;
-        fields = Slack.getGeneralFields('Completed');
-      } else {
-        color = this.options.colors.failure;
-        fields = Slack.getGeneralFields('Failed');
-      }
+      this.status = status.FAILURE;
     } else if (!this.isInProgress && !isFailed) {
-      color = this.options.colors.success;
-      fields = Slack.getGeneralFields('Success');
+      this.status = status.SUCCESS;
     }
+
+    const fields: MrkdwnElement[] = this.getGeneralFields();
 
     if (this.options.input.busted) {
       if (this.isInProgress) {
@@ -420,13 +448,13 @@ export class Slack {
       ts: this.timestamp,
       attachments: [
         {
+          color: this.getStatusColor(),
           blocks: [
             {
               type: 'section',
               fields,
             },
           ],
-          color,
         },
       ],
     });
