@@ -73,9 +73,17 @@ find code issues or run tests. It supports [Slack][] notification as well.
     # Default: 'issues'
     slack-stylua-format: 'issues'
 
+    # Ignore check versions step (disables versions output)
+    # Default: false
+    ignore-check-versions: false
+
     # Ignore failures (action passes even when issues found or tests fail)
     # Default: false
     ignore-failure: false
+
+    # Ignore set output step (disables all action output)
+    # Default: false
+    ignore-set-output: false
   env:
     # Slack channel for sending a notification to
     SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}

@@ -4,10 +4,10 @@ import * as ldoc from './ldoc';
 import * as luacheck from './luacheck';
 import * as prettier from './prettier';
 import * as stylua from './stylua';
-import * as versions from './versions';
 import { Input, get as inputGet } from './input';
 import { Output, set as outputSet } from './output';
 import { Slack } from './slack';
+import { check as checkVersions } from './versions';
 
 async function getEnv(
   name: string,
@@ -19,19 +19,6 @@ async function getEnv(
     process.exit(1);
   }
   return result;
-}
-
-async function checkVersions(): Promise<versions.Versions> {
-  core.startGroup('Check versions');
-  const v: versions.Versions = await versions.get();
-  core.info(`Busted: ${v.busted}`);
-  core.info(`LDoc: ${v.ldoc}`);
-  core.info(`Lua: ${v.lua}`);
-  core.info(`Luacheck: ${v.luacheck}`);
-  core.info(`Prettier: ${v.prettier}`);
-  core.info(`StyLua: ${v.stylua}`);
-  core.endGroup();
-  return Promise.resolve(v);
 }
 
 async function run() {
@@ -65,7 +52,9 @@ async function run() {
   }
 
   try {
-    output.versions = await checkVersions();
+    if (!input.ignoreCheckVersions) {
+      output.versions = await checkVersions();
+    }
 
     if (input.slack) {
       await slack.start();

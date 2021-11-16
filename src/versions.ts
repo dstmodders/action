@@ -35,6 +35,19 @@ export async function get(): Promise<Versions> {
   return Promise.resolve(versions);
 }
 
+export async function check(): Promise<Versions> {
+  core.startGroup('Check versions');
+  const v: Versions = await get();
+  core.info(`Busted: ${v.busted}`);
+  core.info(`LDoc: ${v.ldoc}`);
+  core.info(`Lua: ${v.lua}`);
+  core.info(`Luacheck: ${v.luacheck}`);
+  core.info(`Prettier: ${v.prettier}`);
+  core.info(`StyLua: ${v.stylua}`);
+  core.endGroup();
+  return Promise.resolve(v);
+}
+
 export async function setOutput(versions: Versions): Promise<void> {
   core.setOutput('busted-version', versions.lua);
   core.setOutput('ldoc-version', versions.ldoc);

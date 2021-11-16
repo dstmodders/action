@@ -60,9 +60,17 @@ inputs:
     description: 'Slack field format for StyLua: failures|issues|passes'
     required: false
 
+  ignore-check-versions:
+    default: 'false'
+    description: 'Ignore check versions step (disables versions output)'
+    required: false
   ignore-failure:
     default: 'false'
     description: 'Ignore failures (action passes even when issues found or tests fail)'
+    required: false
+  ignore-set-output:
+    default: 'false'
+    description: 'Ignore set output step (disables all action output)'
     required: false
 outputs:
   busted-version:

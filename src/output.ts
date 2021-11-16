@@ -21,9 +21,15 @@ export interface Output {
 }
 
 export async function set(input: Input, output: Output): Promise<void> {
+  if (input.ignoreSetOutput) {
+    return;
+  }
+
   core.startGroup('Set output');
 
-  await versions.setOutput(output.versions);
+  if (!input.ignoreCheckVersions) {
+    await versions.setOutput(output.versions);
+  }
 
   if (input.busted) {
     await busted.setOutput(output.busted);
