@@ -250,7 +250,7 @@ export class Slack {
     }
     return this.ldoc.exitCode === 0
       ? Slack.getField('LDoc', 'Success')
-      : Slack.getField('LDoc', 'Failed');
+      : Slack.getField('LDoc', 'Failure');
   }
 
   private getLintField(
@@ -285,6 +285,46 @@ export class Slack {
     return Slack.getField(`${title} issues`, result.issues.toString());
   }
 
+  private updateStatus(): void {
+    if (this.options.input.slackForceStatus.length > 0) {
+      if (this.isInProgress) {
+        this.status = status.IN_PROGRESS;
+        return;
+      }
+
+      switch (this.options.input.slackForceStatus) {
+        case 'success':
+          this.status = status.SUCCESS;
+          return;
+        case 'failure':
+          this.status = status.FAILURE;
+          return;
+        case 'cancelled':
+          this.status = status.CANCELLED;
+          return;
+        case 'skipped':
+          this.status = status.SKIPPED;
+          return;
+        default:
+          this.status = status.IN_PROGRESS;
+          return;
+      }
+    }
+
+    const isFailed =
+      this.bustedTest.failed > 0 ||
+      this.ldoc.exitCode > 0 ||
+      this.luacheckLint.issues > 0 ||
+      this.prettierLint.failed > 0 ||
+      this.styLuaLint.failed > 0;
+
+    if (!this.isInProgress && isFailed) {
+      this.status = status.FAILURE;
+    } else if (!this.isInProgress && !isFailed) {
+      this.status = status.SUCCESS;
+    }
+  }
+
   private async updateLintOrTest(result: Lint | Test): Promise<void> {
     if (!this.isRunning) {
       throw new Error('Slack app is not running');
@@ -292,7 +332,7 @@ export class Slack {
 
     try {
       if (await this.update()) {
-        if (result.failed > 0) {
+        if (result.output.length > 0) {
           core.info('');
         }
         core.info('Updated Slack message');
@@ -376,18 +416,7 @@ export class Slack {
       throw new Error('Slack app is not running');
     }
 
-    const isFailed =
-      this.bustedTest.failed > 0 ||
-      this.ldoc.exitCode > 0 ||
-      this.luacheckLint.issues > 0 ||
-      this.prettierLint.failed > 0 ||
-      this.styLuaLint.failed > 0;
-
-    if (!this.isInProgress && isFailed) {
-      this.status = status.FAILURE;
-    } else if (!this.isInProgress && !isFailed) {
-      this.status = status.SUCCESS;
-    }
+    this.updateStatus();
 
     const fields: MrkdwnElement[] = this.getGeneralFields();
 

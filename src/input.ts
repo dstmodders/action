@@ -9,25 +9,41 @@ export interface Input {
   luacheck: boolean;
   prettier: boolean;
   slack: boolean;
+  slackForceStatus: string;
   slackLuacheckFormat: string;
   slackPrettierFormat: string;
   slackStyLuaFormat: string;
   stylua: boolean;
 }
 
-function getSlackFormat(name: string): string {
+function getSlackForceStatus(name: string): string {
   const value = core.getInput(name);
+  if (value.length === 0) {
+    return '';
+  }
   if (
-    value.length > 0 &&
-    (value === 'failures' || value === 'issues' || value === 'passes')
+    value === 'success' ||
+    value === 'failure' ||
+    value === 'cancelled' ||
+    value === 'skipped'
   ) {
     return value;
   }
+  throw new Error(
+    `Invalid ${name} input value. Should be: success|failure|cancelled|skipped`,
+  );
+}
+
+function getSlackFormat(name: string): string {
+  const value = core.getInput(name);
   if (value.length === 0) {
     return 'issues';
   }
+  if (value === 'failures' || value === 'issues' || value === 'passes') {
+    return value;
+  }
   throw new Error(
-    `Invalid ${name} input value. Should be: failures|issues|passes`,
+    `Invalid ${name} input value. Should be: issues|passes|failures`,
   );
 }
 
@@ -42,6 +58,7 @@ export async function get(): Promise<Input> {
     input.luacheck = core.getBooleanInput('luacheck');
     input.prettier = core.getBooleanInput('prettier');
     input.slack = core.getBooleanInput('slack');
+    input.slackForceStatus = getSlackForceStatus('slack-force-status');
     input.slackLuacheckFormat = getSlackFormat('slack-luacheck-format');
     input.slackPrettierFormat = getSlackFormat('slack-prettier-format');
     input.slackStyLuaFormat = getSlackFormat('slack-stylua-format');

@@ -61,15 +61,23 @@ find code issues or run tests. It supports [Slack][] notification as well.
     # Default: '#dcad04'
     slack-color-warning: '#dcad04'
 
-    # Slack field format for Luacheck: failures|issues|passes
+    # Force Slack status: success|failure|cancelled|skipped
+    # Respects:
+    #   steps.<step id>.conclusion
+    #   steps.<step id>.outcome
+    # See: https://docs.github.com/en/actions/learn-github-actions/contexts#steps-context
+    # Default: ''
+    slack-force-status: ''
+
+    # Slack field format for Luacheck: issues|passes|failures
     # Default: 'issues'
     slack-luacheck-format: 'issues'
 
-    # Slack field format for Prettier: failures|issues|passes
+    # Slack field format for Prettier: issues|passes|failures
     # Default: 'issues'
     slack-prettier-format: 'issues'
 
-    # Slack field format for StyLua: failures|issues|passes
+    # Slack field format for StyLua: issues|passes|failures
     # Default: 'issues'
     slack-stylua-format: 'issues'
 
