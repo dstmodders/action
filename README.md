@@ -1,5 +1,9 @@
 # github-action
 
+[![Codecov](https://img.shields.io/codecov/c/github/dstmodders/github-action.svg)](https://codecov.io/gh/dstmodders/github-action)
+[![Code Climate](https://img.shields.io/codeclimate/maintainability/dstmodders/github-action)](https://codeclimate.com/github/dstmodders/github-action)
+![Dependencies](https://img.shields.io/librariesio/github/dstmodders/github-action)
+
 ## Overview
 
 This action for [GitHub Actions][] is designed to run different modding tools
@@ -14,7 +18,7 @@ find code issues or run tests. It supports [Slack][] notification as well.
 - [Slack notification](#slack-notification)
   - [1. Add your app](#1-add-your-app)
   - [2. Enable notification](#2-enable-notification)
-  - [3. Enjoy!](#3-enjoy)
+  - [3. Enjoy](#3-enjoy)
 
 ## Usage
 
@@ -161,7 +165,7 @@ For example:
     SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }} # required
 ```
 
-### 3. Enjoy!
+### 3. Enjoy
 
 ![Slack notifications](slack-notifications.png 'Slack notifications')
 
