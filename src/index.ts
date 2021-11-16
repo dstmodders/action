@@ -25,6 +25,7 @@ async function checkVersions(): Promise<versions.Versions> {
   core.startGroup('Check versions');
   const v: versions.Versions = await versions.get();
   core.info(`Busted: ${v.busted}`);
+  core.info(`LDoc: ${v.ldoc}`);
   core.info(`Lua: ${v.lua}`);
   core.info(`Luacheck: ${v.luacheck}`);
   core.info(`Prettier: ${v.prettier}`);

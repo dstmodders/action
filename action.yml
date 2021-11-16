@@ -62,6 +62,8 @@ inputs:
 outputs:
   busted-version:
     description: 'Busted version'
+  ldoc-version:
+    description: 'LDoc version'
   lua-version:
     description: 'Lua version'
   luacheck-version:
