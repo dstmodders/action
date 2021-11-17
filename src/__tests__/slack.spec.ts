@@ -1,6 +1,6 @@
 import expect from 'expect';
-import { Slack, SlackOptions } from '../slack';
 import { Input } from '../input';
+import { Slack, SlackOptions } from '../slack';
 
 describe('slack', () => {
   let input: Input;
@@ -27,12 +27,6 @@ describe('slack', () => {
       channel: 'test',
       signingSecret: '',
       token: '',
-      colors: {
-        default: '#1f242b',
-        failure: '#cc1f2d',
-        success: '#24a943',
-        warning: '#dcad04',
-      },
       input,
     };
   });

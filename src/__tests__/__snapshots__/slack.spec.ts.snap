@@ -28,12 +28,6 @@ Slack {
   },
   "options": Object {
     "channel": "test",
-    "colors": Object {
-      "default": "#1f242b",
-      "failure": "#cc1f2d",
-      "success": "#24a943",
-      "warning": "#dcad04",
-    },
     "input": Object {
       "busted": false,
       "ignoreCheckVersions": false,

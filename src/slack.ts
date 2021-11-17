@@ -11,12 +11,6 @@ export interface SlackOptions {
   input: Input;
   signingSecret: string;
   token: string;
-  colors: {
-    default: string;
-    failure: string;
-    success: string;
-    warning: string;
-  };
 }
 
 const errors = {
@@ -71,10 +65,8 @@ export class Slack {
 
     const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
     let branchName: string = '';
-    let result: string = '';
+    let result: string = `<${repoUrl}|${owner}/${repo}>`;
     let url: string = '';
-
-    result = `<${repoUrl}|${owner}/${repo}>`;
 
     switch (eventName) {
       case 'pull_request':
@@ -188,14 +180,14 @@ export class Slack {
   private getStatusColor(): string {
     switch (this.status) {
       case status.SUCCESS:
-        return this.options.colors.success;
+        return this.options.input.slackColorSuccess;
       case status.FAILURE:
         if (this.options.input.ignoreFailure) {
-          return this.options.colors.warning;
+          return this.options.input.slackColorWarning;
         }
-        return this.options.colors.failure;
+        return this.options.input.slackColorFailure;
       default:
-        return this.options.colors.default;
+        return this.options.input.slackColorDefault;
     }
   }
 
@@ -393,7 +385,7 @@ export class Slack {
       token: this.options.token,
       attachments: [
         {
-          color: this.options.colors.default,
+          color: this.options.input.slackColorDefault,
           blocks: [
             {
               type: 'section',

@@ -32,12 +32,6 @@ async function run() {
       channel: await getEnv('SLACK_CHANNEL', input.slack),
       signingSecret: await getEnv('SLACK_SIGNING_SECRET', input.slack),
       token: await getEnv('SLACK_TOKEN', input.slack),
-      colors: {
-        default: core.getInput('slack-color-default'),
-        failure: core.getInput('slack-color-failure'),
-        success: core.getInput('slack-color-success'),
-        warning: core.getInput('slack-color-warning'),
-      },
       input,
     });
   } catch (error) {

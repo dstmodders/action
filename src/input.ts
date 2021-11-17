@@ -9,6 +9,10 @@ export interface Input {
   luacheck: boolean;
   prettier: boolean;
   slack: boolean;
+  slackColorDefault: string;
+  slackColorFailure: string;
+  slackColorSuccess: string;
+  slackColorWarning: string;
   slackForceStatus: string;
   slackLuacheckFormat: string;
   slackPrettierFormat: string;
@@ -47,6 +51,14 @@ function getSlackFormat(name: string): string {
   );
 }
 
+function getSlackColor(name: string): string {
+  const value = core.getInput(name);
+  if (/^#[0-9A-F]{6}$/i.test(value)) {
+    return value;
+  }
+  throw new Error(`Invalid ${name} input value. Should be a valid HEX color`);
+}
+
 export async function get(): Promise<Input> {
   try {
     const input: Input = <Input>{};
@@ -58,6 +70,10 @@ export async function get(): Promise<Input> {
     input.luacheck = core.getBooleanInput('luacheck');
     input.prettier = core.getBooleanInput('prettier');
     input.slack = core.getBooleanInput('slack');
+    input.slackColorDefault = getSlackColor('slack-color-default');
+    input.slackColorFailure = getSlackColor('slack-color-failure');
+    input.slackColorSuccess = getSlackColor('slack-color-success');
+    input.slackColorWarning = getSlackColor('slack-color-warning');
     input.slackForceStatus = getSlackForceStatus('slack-force-status');
     input.slackLuacheckFormat = getSlackFormat('slack-luacheck-format');
     input.slackPrettierFormat = getSlackFormat('slack-prettier-format');
