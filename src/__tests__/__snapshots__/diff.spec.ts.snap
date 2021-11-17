@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`diff module compare() when adding should match the snapshot 1`] = `
+exports[`diff compare() when adding should match the snapshot 1`] = `
 Array [
   Object {
     "action": "add",
@@ -23,7 +23,7 @@ Array [
 ]
 `;
 
-exports[`diff module compare() when removing should match the snapshot 1`] = `
+exports[`diff compare() when removing should match the snapshot 1`] = `
 Array [
   Object {
     "action": "remove",
@@ -41,7 +41,7 @@ Array [
 ]
 `;
 
-exports[`diff module compare() when replacing should match the snapshot 1`] = `
+exports[`diff compare() when replacing should match the snapshot 1`] = `
 Array [
   Object {
     "action": "replace",
@@ -75,4 +75,4 @@ Replaced 3d line
 ]
 `;
 
-exports[`diff module compare() when unchanged should match the snapshot 1`] = `Array []`;
+exports[`diff compare() when unchanged should match the snapshot 1`] = `Array []`;

@@ -1,7 +1,7 @@
 import expect from 'expect';
 import * as diff from '../diff';
 
-describe('diff module', () => {
+describe('diff', () => {
   describe('compare()', () => {
     const original: string = `1st line
 2nd line

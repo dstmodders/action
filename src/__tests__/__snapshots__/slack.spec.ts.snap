@@ -1,0 +1,72 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`slack when initialize Slack class should match the snapshot 1`] = `
+Slack {
+  "app": null,
+  "bustedTest": Object {
+    "exitCode": 0,
+    "failed": 0,
+    "output": "",
+    "passed": 0,
+    "time": "",
+    "total": 0,
+  },
+  "channelID": "",
+  "isInProgress": false,
+  "isRunning": false,
+  "ldoc": Object {
+    "exitCode": 0,
+    "stderr": "",
+    "stdout": "",
+  },
+  "luacheckLint": Object {
+    "failed": 0,
+    "files": Array [],
+    "issues": 0,
+    "output": "",
+    "passed": 0,
+  },
+  "options": Object {
+    "channel": "test",
+    "colors": Object {
+      "default": "#1f242b",
+      "failure": "#cc1f2d",
+      "success": "#24a943",
+      "warning": "#dcad04",
+    },
+    "input": Object {
+      "busted": false,
+      "ignoreCheckVersions": false,
+      "ignoreFailure": false,
+      "ignoreSetOutput": false,
+      "ldoc": false,
+      "luacheck": false,
+      "prettier": false,
+      "slack": false,
+      "slackForceStatus": "",
+      "slackLuacheckFormat": "",
+      "slackPrettierFormat": "",
+      "slackStyLuaFormat": "",
+      "stylua": false,
+    },
+    "signingSecret": "",
+    "token": "",
+  },
+  "prettierLint": Object {
+    "failed": 0,
+    "files": Array [],
+    "issues": 0,
+    "output": "",
+    "passed": 0,
+  },
+  "status": "in-progress",
+  "styLuaLint": Object {
+    "failed": 0,
+    "files": Array [],
+    "issues": 0,
+    "output": "",
+    "passed": 0,
+  },
+  "timestamp": "",
+}
+`;
