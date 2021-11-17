@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`input get() when all inputs are set as default values should match the snapshot 1`] = `
+Object {
+  "busted": false,
+  "ignoreCheckVersions": false,
+  "ignoreFailure": false,
+  "ignoreSetOutput": false,
+  "ldoc": false,
+  "luacheck": false,
+  "prettier": false,
+  "slack": false,
+  "slackColorDefault": "#1f242b",
+  "slackColorFailure": "#cc1f2d",
+  "slackColorSuccess": "#24a943",
+  "slackColorWarning": "#dcad04",
+  "slackForceStatus": "",
+  "slackLuacheckFormat": "issues",
+  "slackPrettierFormat": "issues",
+  "slackStyLuaFormat": "issues",
+  "stylua": false,
+}
+`;
