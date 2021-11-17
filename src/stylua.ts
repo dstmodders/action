@@ -111,7 +111,7 @@ export async function run(
   try {
     core.startGroup('Run StyLua');
     const result: Lint = await lint(input);
-    if (slack) {
+    if (input.slack && slack) {
       await slack.updateStyLua(result);
     }
     core.endGroup();

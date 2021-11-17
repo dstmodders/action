@@ -128,7 +128,7 @@ export async function run(
   try {
     core.startGroup('Run Luacheck');
     const result: Lint = await lint(input);
-    if (slack) {
+    if (input.slack && slack) {
       await slack.updateLuacheck(result);
     }
     core.endGroup();

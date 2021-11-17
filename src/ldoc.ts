@@ -121,7 +121,7 @@ export async function run(
   try {
     core.startGroup('Run LDoc');
     const result: LDoc = await generate(input);
-    if (slack) {
+    if (input.slack && slack) {
       await slack.updateLDoc(result);
     }
     core.endGroup();

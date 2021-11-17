@@ -155,7 +155,7 @@ export async function run(
     const title = 'Busted';
     core.startGroup(`Run ${title}`);
     const result: Test = await test(input);
-    if (slack) {
+    if (input.slack && slack) {
       await slack.updateBusted(result);
     }
     core.endGroup();

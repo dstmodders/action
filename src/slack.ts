@@ -19,6 +19,11 @@ export interface SlackOptions {
   };
 }
 
+const errors = {
+  IS_ALREADY_RUNNING: 'Slack app is already running',
+  IS_NOT_RUNNING: 'Slack app is not running',
+};
+
 export const status = {
   CANCELLED: 'cancelled',
   FAILURE: 'failure',
@@ -28,7 +33,7 @@ export const status = {
 };
 
 export class Slack {
-  private app: App;
+  private app: App | null;
 
   private channelID: string;
 
@@ -166,6 +171,7 @@ export class Slack {
   }
 
   constructor(options: SlackOptions) {
+    this.app = null;
     this.bustedTest = newEmptyTest();
     this.channelID = '';
     this.isInProgress = false;
@@ -177,11 +183,6 @@ export class Slack {
     this.status = status.IN_PROGRESS;
     this.styLuaLint = newEmptyLint();
     this.timestamp = '';
-
-    this.app = new App({
-      signingSecret: options.signingSecret,
-      token: options.token,
-    });
   }
 
   private getStatusColor(): string {
@@ -223,6 +224,10 @@ export class Slack {
   }
 
   private async findChannel(name: string) {
+    if (!this.app) {
+      return null;
+    }
+
     core.debug(`Finding #${name} channel...`);
     const result = await this.app.client.conversations.list({
       token: this.options.token,
@@ -326,10 +331,6 @@ export class Slack {
   }
 
   private async updateLintOrTest(result: Lint | Test): Promise<void> {
-    if (!this.isRunning) {
-      throw new Error('Slack app is not running');
-    }
-
     try {
       if (await this.update()) {
         if (result.output.length > 0) {
@@ -344,8 +345,8 @@ export class Slack {
   }
 
   private async post(): Promise<boolean> {
-    if (!this.isRunning) {
-      throw new Error('Slack app is not running');
+    if (!this.app) {
+      return Promise.reject(errors.IS_NOT_RUNNING);
     }
 
     const fields: MrkdwnElement[] = this.getGeneralFields();
@@ -412,8 +413,12 @@ export class Slack {
   }
 
   public async update(): Promise<boolean> {
-    if (!this.isRunning) {
-      throw new Error('Slack app is not running');
+    if (!this.app || !this.isRunning) {
+      return Promise.reject(new Error(errors.IS_NOT_RUNNING));
+    }
+
+    if (!this.app) {
+      return Promise.reject(errors.IS_NOT_RUNNING);
     }
 
     this.updateStatus();
@@ -504,8 +509,8 @@ export class Slack {
   public async updateLDoc(result: LDoc): Promise<void> {
     this.ldoc = result;
 
-    if (!this.isRunning) {
-      throw new Error('Slack app is not running');
+    if (!this.app || !this.isRunning) {
+      return Promise.reject(new Error(errors.IS_NOT_RUNNING));
     }
 
     try {
@@ -535,9 +540,27 @@ export class Slack {
   }
 
   public async start(): Promise<void | Error> {
+    if (this.isRunning) {
+      throw new Error(errors.IS_ALREADY_RUNNING);
+    }
+
+    if (
+      this.options.signingSecret.length === 0 ||
+      this.options.token.length === 0
+    ) {
+      throw new Error(
+        'Slack app token or signing secret not found. Did you forget to set SLACK_SIGNING_SECRET and/or SLACK_TOKEN environment variables?',
+      );
+    }
+
     core.startGroup('Run Slack app');
     core.debug('Starting Slack app...');
+
     try {
+      this.app = new App({
+        signingSecret: this.options.signingSecret,
+        token: this.options.token,
+      });
       await this.app.start(3000);
       this.isInProgress = true;
       this.isRunning = true;
@@ -557,8 +580,13 @@ export class Slack {
   }
 
   public async stop(): Promise<void | Error> {
+    if (!this.app || !this.isRunning) {
+      throw new Error(errors.IS_NOT_RUNNING);
+    }
+
     core.startGroup('Stop Slack app');
     core.debug('Stopping Slack app...');
+
     try {
       this.isInProgress = false;
       if (await this.update()) {
