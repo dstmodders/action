@@ -2,7 +2,7 @@
 
 [![Codecov](https://img.shields.io/codecov/c/github/dstmodders/action.svg)](https://codecov.io/gh/dstmodders/action)
 [![Code Climate](https://img.shields.io/codeclimate/maintainability/dstmodders/action)](https://codeclimate.com/github/dstmodders/action)
-![Dependencies](https://img.shields.io/librariesio/github/dstmodders/action)
+[![Dependencies](https://img.shields.io/librariesio/github/dstmodders/action)](https://libraries.io/github/dstmodders/action)
 
 ## Overview
 
