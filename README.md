@@ -1,8 +1,8 @@
-# github-action
+# action
 
-[![Codecov](https://img.shields.io/codecov/c/github/dstmodders/github-action.svg)](https://codecov.io/gh/dstmodders/github-action)
-[![Code Climate](https://img.shields.io/codeclimate/maintainability/dstmodders/github-action)](https://codeclimate.com/github/dstmodders/github-action)
-![Dependencies](https://img.shields.io/librariesio/github/dstmodders/github-action)
+[![Codecov](https://img.shields.io/codecov/c/github/dstmodders/action.svg)](https://codecov.io/gh/dstmodders/action)
+[![Code Climate](https://img.shields.io/codeclimate/maintainability/dstmodders/action)](https://codeclimate.com/github/dstmodders/action)
+![Dependencies](https://img.shields.io/librariesio/github/dstmodders/action)
 
 ## Overview
 
@@ -23,7 +23,7 @@ find code issues or run tests. It supports [Slack][] notification as well.
 ## Usage
 
 ```yml
-- uses: dstmodders/github-action@main
+- uses: dstmodders/action@main
   with:
     # Run Busted
     # Default: false
@@ -142,7 +142,7 @@ Add `slack` input set to `true` with all corresponding env variables:
 For example:
 
 ```yml
-- uses: dstmodders/github-action@main
+- uses: dstmodders/action@main
   with:
     luacheck: true
     prettier: true
@@ -155,7 +155,7 @@ For example:
 ```
 
 ```yml
-- uses: dstmodders/github-action@main
+- uses: dstmodders/action@main
   with:
     busted: true
     slack: true # required

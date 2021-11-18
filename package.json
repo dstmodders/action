@@ -1,5 +1,5 @@
 {
-  "name": "github-action",
+  "name": "action",
   "description": "GitHub Action for Depressed DST Modders.",
   "version": "0.1.0",
   "author": {
@@ -31,7 +31,7 @@
     "yarn-audit-fix": "^7.2.1",
     "yarn-deduplicate": "^3.1.0"
   },
-  "homepage": "https://github.com/dstmodders/github-action#readme",
+  "homepage": "https://github.com/dstmodders/action#readme",
   "keywords": [
     "github-action",
     "klei-tools",
@@ -43,7 +43,7 @@
   "main": "lib/index.js",
   "repository": {
     "type": "git",
-    "url": "github:dstmodders/github-action"
+    "url": "github:dstmodders/action"
   },
   "scripts": {
     "audit:fix": "yarn-audit-fix",
