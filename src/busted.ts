@@ -48,6 +48,8 @@ export async function getVersion(): Promise<string> {
   return result;
 }
 
+// This approach doesn't give the real number of tests. You should get them from
+// Busted output instead.
 export async function getNrOfTests(): Promise<number> {
   try {
     let result: number = 0;
@@ -81,7 +83,7 @@ export async function test(input: Input): Promise<Test> {
   const result: Test = newEmptyTest();
 
   try {
-    const nrOfTests = await getNrOfTests();
+    let nrOfTests = await getNrOfTests();
     let output: string = '';
 
     if (nrOfTests === 0) {
@@ -89,7 +91,7 @@ export async function test(input: Input): Promise<Test> {
       return result;
     }
 
-    core.info(`Running ${nrOfTests} test${nrOfTests === 1 ? '' : 's'}...`);
+    core.info(`Running tests...`);
 
     const exitCode: number = await exec.exec('busted', ['.'], {
       ignoreReturnCode: true,
@@ -102,6 +104,8 @@ export async function test(input: Input): Promise<Test> {
     });
 
     if (output.length > 0) {
+      nrOfTests = output.split('\n')[0].length;
+
       const matches: RegExpMatchArray | null = output.match(
         /(\d*) successes.*: (\d+\.\d+|\d+) seconds/i,
       );
@@ -111,6 +115,9 @@ export async function test(input: Input): Promise<Test> {
         result.passed =
           successes.length > 0 ? Number.parseInt(successes, 10) : 0;
         result.failed = nrOfTests - result.passed;
+        if (result.failed < 0) {
+          result.failed = 0;
+        }
         result.time = seconds.length > 0 ? seconds : '';
       }
     }
