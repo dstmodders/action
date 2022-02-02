@@ -1,10 +1,10 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
-import { Input } from './input';
-import { LDoc, newEmptyLDoc } from './ldoc';
-import { Lint, newEmptyLint } from './lint';
-import { Test, newEmptyTest } from './busted';
+import { Input } from '../input';
+import { LDoc, newEmptyLDoc } from '../ldoc';
+import { Lint, newEmptyLint } from '../lint';
+import { Test, newEmptyTest } from '../busted';
 
 export interface SlackOptions {
   channel: string;
@@ -26,7 +26,7 @@ export const status = {
   SUCCESS: 'success',
 };
 
-export class Slack {
+export default class Slack {
   private app: App | null;
 
   private channelID: string;
