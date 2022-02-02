@@ -23,7 +23,7 @@ export async function getVersion(): Promise<string> {
   try {
     let stderr: string = '';
 
-    core.debug(`Getting LDoc version...`);
+    core.debug('Getting LDoc version...');
     await exec.exec('ldoc', [], {
       ignoreReturnCode: true,
       silent: true,

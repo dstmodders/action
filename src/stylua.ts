@@ -19,7 +19,7 @@ export async function getVersion(): Promise<string> {
   try {
     let output: string = '';
 
-    core.debug(`Getting StyLua version...`);
+    core.debug('Getting StyLua version...');
     await exec.exec('stylua', ['--version'], {
       silent: true,
       listeners: {
@@ -44,7 +44,7 @@ export async function lint(input: Input): Promise<Lint> {
   try {
     const files = await getFiles('.styluaignore', 'lua');
     if (files.length === 0) {
-      core.info(`No files found`);
+      core.info('No files found');
       return result;
     }
 

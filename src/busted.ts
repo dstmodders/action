@@ -29,7 +29,7 @@ export async function getVersion(): Promise<string> {
   try {
     let output: string = '';
 
-    core.debug(`Getting Busted version...`);
+    core.debug('Getting Busted version...');
     await exec.exec('busted', ['--version'], {
       silent: true,
       listeners: {
@@ -87,11 +87,11 @@ export async function test(input: Input): Promise<Test> {
     let output: string = '';
 
     if (nrOfTests === 0) {
-      core.info(`No tests found`);
+      core.info('No tests found');
       return result;
     }
 
-    core.info(`Running tests...`);
+    core.info('Running tests...');
 
     const exitCode: number = await exec.exec('busted', ['.'], {
       ignoreReturnCode: true,

@@ -19,7 +19,7 @@ export async function getVersion(): Promise<string> {
   try {
     let output: string = '';
 
-    core.debug(`Getting Luacheck version...`);
+    core.debug('Getting Luacheck version...');
     await exec.exec('luacheck', ['--version'], {
       silent: true,
       listeners: {
@@ -45,7 +45,7 @@ export async function lint(input: Input): Promise<Lint> {
   try {
     const files = await getFiles('.luacheckignore', 'lua');
     if (files.length === 0) {
-      core.info(`No files found`);
+      core.info('No files found');
       return result;
     }
 

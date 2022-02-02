@@ -8,7 +8,7 @@ export async function getVersion(): Promise<string> {
   try {
     let error: string = '';
 
-    core.debug(`Getting Lua version...`);
+    core.debug('Getting Lua version...');
     await exec.exec('lua', ['-v'], {
       silent: true,
       listeners: {

@@ -19,7 +19,7 @@ export async function getVersion(): Promise<string> {
   try {
     let output: string = '';
 
-    core.debug(`Getting Prettier version...`);
+    core.debug('Getting Prettier version...');
     await exec.exec('prettier', ['--version'], {
       silent: true,
       listeners: {
@@ -44,7 +44,7 @@ export async function lint(input: Input): Promise<Lint> {
   try {
     const files = await getFiles('.prettierignore', '{md,xml,yml}');
     if (files.length === 0) {
-      core.info(`No files found`);
+      core.info('No files found');
       return result;
     }
 
