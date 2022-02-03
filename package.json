@@ -13,7 +13,8 @@
     "@slack/bolt": "^3.11.0",
     "diff": "^5.0.0",
     "glob": "^8.0.1",
-    "ignore": "^5.2.0"
+    "ignore": "^5.2.0",
+    "sprintf-js": "^1.1.2"
   },
   "devDependencies": {
     "@types/jest": "^27.4.0",
