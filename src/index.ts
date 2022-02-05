@@ -7,19 +7,8 @@ import * as stylua from './stylua';
 import { Input, get as inputGet } from './input';
 import { Output, set as outputSet } from './output';
 import { Slack } from './slack';
+import { getEnv } from './helpers';
 import { check as checkVersions } from './versions';
-
-async function getEnv(
-  name: string,
-  isRequired: boolean = false,
-): Promise<string> {
-  const result = process.env[name] || '';
-  if (isRequired && result.length === 0) {
-    core.setFailed(`Failed to get a required environment variable ${name}`);
-    process.exit(1);
-  }
-  return result;
-}
 
 async function run() {
   const output: Output = <Output>{};
@@ -29,9 +18,9 @@ async function run() {
   try {
     input = await inputGet();
     slack = new Slack({
-      channel: await getEnv('SLACK_CHANNEL', input.slack),
-      signingSecret: await getEnv('SLACK_SIGNING_SECRET', input.slack),
-      token: await getEnv('SLACK_TOKEN', input.slack),
+      channel: getEnv('SLACK_CHANNEL', input.slack),
+      signingSecret: getEnv('SLACK_SIGNING_SECRET', input.slack),
+      token: getEnv('SLACK_TOKEN', input.slack),
       input,
     });
   } catch (error) {
