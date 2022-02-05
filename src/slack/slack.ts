@@ -60,8 +60,12 @@ export default class Slack {
   }
 
   private static getRepoText(): string {
-    const { eventName, issue, serverUrl } = github.context;
-    const { owner, repo } = github.context.repo;
+    const {
+      eventName,
+      issue,
+      repo: { owner, repo },
+      serverUrl,
+    } = github.context;
 
     const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
     let branchName: string = '';
@@ -90,8 +94,14 @@ export default class Slack {
   }
 
   private static getText(): string {
-    const { actor, job, runId, serverUrl, workflow } = github.context;
-    const { owner, repo } = github.context.repo;
+    const {
+      actor,
+      job,
+      repo: { owner, repo },
+      runId,
+      serverUrl,
+      workflow,
+    } = github.context;
 
     const actorUrl: string = `${serverUrl}/${actor}`;
     const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
@@ -130,8 +140,13 @@ export default class Slack {
   }
 
   private static getRefField(): MrkdwnElement {
-    const { eventName, issue, serverUrl, sha } = github.context;
-    const { owner, repo } = github.context.repo;
+    const {
+      eventName,
+      issue,
+      repo: { owner, repo },
+      serverUrl,
+      sha,
+    } = github.context;
 
     const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
     const commitUrl: string = `${repoUrl}/commit/${sha}`;
