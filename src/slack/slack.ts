@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
+import * as helpers from '../helpers';
 import { Input } from '../input';
 import { LDoc, newEmptyLDoc } from '../ldoc';
 import { Lint, newEmptyLint } from '../lint';
@@ -51,14 +52,6 @@ export default class Slack {
 
   public styLuaLint: Lint;
 
-  private static getBranchName(): string {
-    const { ref } = github.context;
-    if (ref.indexOf('refs/heads/') > -1) {
-      return ref.slice('refs/heads/'.length);
-    }
-    return '';
-  }
-
   private static getRepoText(): string {
     const {
       eventName,
@@ -80,7 +73,7 @@ export default class Slack {
         }
         break;
       case 'push':
-        branchName = this.getBranchName();
+        branchName = helpers.getBranchName();
         if (branchName.length > 0) {
           url = `${repoUrl}/tree/${branchName}`;
           result = `${result}@<${url}|${branchName}>`;
@@ -170,7 +163,7 @@ export default class Slack {
           `<${commitUrl}|\`${sha.substring(
             0,
             7,
-          )} (${Slack.getBranchName()})\`>`,
+          )} (${helpers.getBranchName()})\`>`,
         );
       default:
         return refField;
