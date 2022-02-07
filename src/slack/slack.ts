@@ -83,17 +83,7 @@ export default class Slack {
   }
 
   private static getText(): string {
-    const {
-      repo: { owner, repo },
-      runId,
-      serverUrl,
-      workflow,
-    } = github.context;
-
-    const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
-    const jobUrl: string = `${repoUrl}/actions/runs/${runId}`;
-
-    return `GitHub Actions <${jobUrl}|${workflow} / ${helpers.getJob()}> job in ${this.getRepoText()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
+    return `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${this.getRepoText()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
   }
 
   private static getField(title: string, value: string): MrkdwnElement {
