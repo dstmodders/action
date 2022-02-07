@@ -6,6 +6,7 @@ import { Input } from '../input';
 import { LDoc, newEmptyLDoc } from '../ldoc';
 import { Lint, newEmptyLint } from '../lint';
 import { Test, newEmptyTest } from '../busted';
+import constants from '../constants';
 
 export interface SlackOptions {
   channel: string;
@@ -13,11 +14,6 @@ export interface SlackOptions {
   signingSecret: string;
   token: string;
 }
-
-const errors = {
-  IS_ALREADY_RUNNING: 'Slack app is already running',
-  IS_NOT_RUNNING: 'Slack app is not running',
-};
 
 export const status = {
   CANCELLED: 'cancelled',
@@ -345,7 +341,7 @@ export default class Slack {
 
   private async post(): Promise<boolean> {
     if (!this.app) {
-      return Promise.reject(errors.IS_NOT_RUNNING);
+      return Promise.reject(constants.ERROR.SLACK_NOT_RUNNING);
     }
 
     const fields: MrkdwnElement[] = this.getGeneralFields();
@@ -413,11 +409,7 @@ export default class Slack {
 
   public async update(): Promise<boolean> {
     if (!this.app || !this.isRunning) {
-      return Promise.reject(new Error(errors.IS_NOT_RUNNING));
-    }
-
-    if (!this.app) {
-      return Promise.reject(errors.IS_NOT_RUNNING);
+      return Promise.reject(constants.ERROR.SLACK_NOT_RUNNING);
     }
 
     this.updateStatus();
@@ -509,7 +501,7 @@ export default class Slack {
     this.ldoc = result;
 
     if (!this.app || !this.isRunning) {
-      return Promise.reject(new Error(errors.IS_NOT_RUNNING));
+      return Promise.reject(new Error(constants.ERROR.SLACK_NOT_RUNNING));
     }
 
     try {
@@ -540,7 +532,7 @@ export default class Slack {
 
   public async start(): Promise<void | Error> {
     if (this.isRunning) {
-      throw new Error(errors.IS_ALREADY_RUNNING);
+      throw new Error(constants.ERROR.SLACK_ALREADY_RUNNING);
     }
 
     if (
@@ -580,7 +572,7 @@ export default class Slack {
 
   public async stop(): Promise<void | Error> {
     if (!this.app || !this.isRunning) {
-      throw new Error(errors.IS_NOT_RUNNING);
+      throw new Error(constants.ERROR.SLACK_NOT_RUNNING);
     }
 
     core.startGroup('Stop Slack app');
