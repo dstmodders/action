@@ -48,7 +48,7 @@ export default class Slack {
 
   public styLuaLint: Lint;
 
-  private static getRepoText(): string {
+  private static getRef(): string {
     const {
       eventName,
       issue,
@@ -83,7 +83,7 @@ export default class Slack {
   }
 
   private static getText(): string {
-    return `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${this.getRepoText()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
+    return `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${this.getRef()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
   }
 
   private static getField(title: string, value: string): MrkdwnElement {
