@@ -53,7 +53,10 @@ Slack {
     "output": "",
     "passed": 0,
   },
-  "status": "in-progress",
+  "status": Object {
+    "color": "#dcad04",
+    "title": "In Progress",
+  },
   "styLuaLint": Object {
     "failed": 0,
     "files": Array [],

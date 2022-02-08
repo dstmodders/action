@@ -2,10 +2,11 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
 import * as helpers from '../helpers';
-import { Input } from '../input';
 import { LDoc, newEmptyLDoc } from '../ldoc';
 import { Lint, newEmptyLint } from '../lint';
 import { Test, newEmptyTest } from '../busted';
+import status, { Status } from '../status';
+import { Input } from '../input';
 import constants from '../constants';
 
 export interface SlackOptions {
@@ -15,14 +16,6 @@ export interface SlackOptions {
   token: string;
 }
 
-export const status = {
-  CANCELLED: 'cancelled',
-  FAILURE: 'failure',
-  IN_PROGRESS: 'in-progress',
-  SKIPPED: 'skipped',
-  SUCCESS: 'success',
-};
-
 export default class Slack {
   private app: App | null;
 
@@ -31,8 +24,6 @@ export default class Slack {
   private isInProgress: boolean;
 
   private options: SlackOptions;
-
-  private status: string;
 
   private timestamp: string;
 
@@ -45,6 +36,8 @@ export default class Slack {
   public luacheckLint: Lint;
 
   public prettierLint: Lint;
+
+  public status: Status;
 
   public styLuaLint: Lint;
 
@@ -163,43 +156,13 @@ export default class Slack {
     this.luacheckLint = newEmptyLint();
     this.options = options;
     this.prettierLint = newEmptyLint();
-    this.status = status.IN_PROGRESS;
+    this.status = status['in-progress'];
     this.styLuaLint = newEmptyLint();
     this.timestamp = '';
   }
 
-  private getStatusColor(): string {
-    switch (this.status) {
-      case status.SUCCESS:
-        return this.options.input.slackColorSuccess;
-      case status.FAILURE:
-        if (this.options.input.ignoreFailure) {
-          return this.options.input.slackColorWarning;
-        }
-        return this.options.input.slackColorFailure;
-      default:
-        return this.options.input.slackColorDefault;
-    }
-  }
-
   private getStatusField(): MrkdwnElement {
-    switch (this.status) {
-      case status.IN_PROGRESS:
-        return Slack.getField('Status', 'In progress');
-      case status.SUCCESS:
-        return Slack.getField('Status', 'Success');
-      case status.FAILURE:
-        if (this.options.input.ignoreFailure) {
-          return Slack.getField('Status', 'Completed');
-        }
-        return Slack.getField('Status', 'Failure');
-      case status.CANCELLED:
-        return Slack.getField('Status', 'Cancelled');
-      case status.SKIPPED:
-        return Slack.getField('Status', 'Skipped');
-      default:
-        return Slack.getField('Status', 'Error');
-    }
+    return Slack.getField('Status', this.status.title);
   }
 
   private getGeneralFields(): MrkdwnElement[] {
@@ -276,25 +239,25 @@ export default class Slack {
   private updateStatus(): void {
     if (this.options.input.slackForceStatus.length > 0) {
       if (this.isInProgress) {
-        this.status = status.IN_PROGRESS;
+        this.status = status['in-progress'];
         return;
       }
 
       switch (this.options.input.slackForceStatus) {
         case 'success':
-          this.status = status.SUCCESS;
+          this.status = status.success;
           return;
         case 'failure':
-          this.status = status.FAILURE;
+          this.status = status.failure;
           return;
         case 'cancelled':
-          this.status = status.CANCELLED;
+          this.status = status.cancelled;
           return;
         case 'skipped':
-          this.status = status.SKIPPED;
+          this.status = status.skipped;
           return;
         default:
-          this.status = status.IN_PROGRESS;
+          this.status = status['in-progress'];
           return;
       }
     }
@@ -307,9 +270,9 @@ export default class Slack {
       this.styLuaLint.failed > 0;
 
     if (!this.isInProgress && isFailed) {
-      this.status = status.FAILURE;
+      this.status = status.failure;
     } else if (!this.isInProgress && !isFailed) {
-      this.status = status.SUCCESS;
+      this.status = status.success;
     }
   }
 
@@ -461,7 +424,7 @@ export default class Slack {
       ts: this.timestamp,
       attachments: [
         {
-          color: this.getStatusColor(),
+          color: this.status.color,
           blocks: [
             {
               type: 'section',
