@@ -41,6 +41,35 @@ export default class Slack {
 
   public styLuaLint: Lint;
 
+  private static getCheckingField(
+    title: string,
+    value: string = 'Checking...',
+  ): MrkdwnElement {
+    return Slack.getField(title, value);
+  }
+
+  private static getCheckingLintField(
+    format: string,
+    name: string,
+    value: string = 'Checking...',
+  ): MrkdwnElement {
+    switch (format) {
+      case 'failures':
+        return Slack.getCheckingField(`${name} failures`, value);
+      case 'passes':
+        return Slack.getCheckingField(`${name} passes`, value);
+      default:
+        return Slack.getCheckingField(`${name} issues`, value);
+    }
+  }
+
+  private static getField(title: string, value: string): MrkdwnElement {
+    return {
+      type: 'mrkdwn',
+      text: `*${title}*\n${value}`,
+    };
+  }
+
   private static getRef(): string {
     const {
       eventName,
@@ -75,39 +104,6 @@ export default class Slack {
     return result;
   }
 
-  private static getText(): string {
-    return `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${this.getRef()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
-  }
-
-  private static getField(title: string, value: string): MrkdwnElement {
-    return {
-      type: 'mrkdwn',
-      text: `*${title}*\n${value}`,
-    };
-  }
-
-  private static getCheckingField(
-    title: string,
-    value: string = 'Checking...',
-  ): MrkdwnElement {
-    return this.getField(title, value);
-  }
-
-  private static getCheckingLintField(
-    format: string,
-    name: string,
-    value: string = 'Checking...',
-  ): MrkdwnElement {
-    switch (format) {
-      case 'failures':
-        return Slack.getCheckingField(`${name} failures`, value);
-      case 'passes':
-        return Slack.getCheckingField(`${name} passes`, value);
-      default:
-        return Slack.getCheckingField(`${name} issues`, value);
-    }
-  }
-
   private static getRefField(): MrkdwnElement {
     const {
       eventName,
@@ -139,6 +135,10 @@ export default class Slack {
       default:
         return refField;
     }
+  }
+
+  private static getText(): string {
+    return `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${Slack.getRef()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
   }
 
   constructor(options: SlackOptions) {
