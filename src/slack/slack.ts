@@ -114,16 +114,14 @@ export default class Slack {
       issue,
       repo: { owner, repo },
       serverUrl,
-      sha,
     } = github.context;
 
     const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
-    const commitUrl: string = `${repoUrl}/commit/${sha}`;
     let url: string = '';
 
     const refField: MrkdwnElement = Slack.getField(
       'Commit',
-      `<${commitUrl}|\`${sha.substring(0, 7)}\`>`,
+      `<${helpers.getCommitUrl()}|\`${helpers.getCommitShort()}\`>`,
     );
 
     switch (eventName) {
@@ -136,10 +134,7 @@ export default class Slack {
       case 'push':
         return Slack.getField(
           'Commit',
-          `<${commitUrl}|\`${sha.substring(
-            0,
-            7,
-          )} (${helpers.getBranchName()})\`>`,
+          `<${helpers.getCommitUrl()}|\`${helpers.getCommitShort()} (${helpers.getBranchName()})\`>`,
         );
       default:
         return refField;
