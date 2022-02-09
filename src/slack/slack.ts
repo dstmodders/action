@@ -156,12 +156,108 @@ export default class Slack {
     this.timestamp = '';
   }
 
+  private getGeneralFields(): MrkdwnElement[] {
+    return [this.getStatusField(), Slack.getRefField()];
+  }
+
+  private getPostFields(): MrkdwnElement[] {
+    const fields: MrkdwnElement[] = this.getGeneralFields();
+
+    if (this.options.input.busted) {
+      fields.push(Slack.getCheckingField('Busted passes'));
+    }
+
+    if (this.options.input.ldoc) {
+      fields.push(Slack.getCheckingField('LDoc', 'Generating...'));
+    }
+
+    if (this.options.input.luacheck) {
+      fields.push(
+        Slack.getCheckingLintField(
+          this.options.input.slackLuacheckFormat,
+          'Luacheck',
+        ),
+      );
+    }
+
+    if (this.options.input.prettier) {
+      fields.push(
+        Slack.getCheckingLintField(
+          this.options.input.slackPrettierFormat,
+          'Prettier',
+        ),
+      );
+    }
+
+    if (this.options.input.stylua) {
+      fields.push(
+        Slack.getCheckingLintField(
+          this.options.input.slackStyLuaFormat,
+          'StyLua',
+        ),
+      );
+    }
+
+    return fields;
+  }
+
   private getStatusField(): MrkdwnElement {
     return Slack.getField('Status', this.status.title);
   }
 
-  private getGeneralFields(): MrkdwnElement[] {
-    return [this.getStatusField(), Slack.getRefField()];
+  private getUpdateFields(): MrkdwnElement[] {
+    const fields: MrkdwnElement[] = this.getGeneralFields();
+
+    if (this.options.input.busted) {
+      if (this.isInProgress) {
+        fields.push(Slack.getCheckingField('Busted passes'));
+      } else if (this.bustedTest.total === 0) {
+        fields.push(Slack.getField('Busted passes', 'No tests'));
+      } else {
+        fields.push(
+          Slack.getField(
+            'Busted passes',
+            `${this.bustedTest.passed} / ${this.bustedTest.total} tests`,
+          ),
+        );
+      }
+    }
+
+    if (this.options.input.ldoc) {
+      fields.push(this.getLDocField());
+    }
+
+    if (this.options.input.luacheck) {
+      fields.push(
+        this.getLintField(
+          this.options.input.slackLuacheckFormat,
+          this.luacheckLint,
+          'Luacheck',
+        ),
+      );
+    }
+
+    if (this.options.input.prettier) {
+      fields.push(
+        this.getLintField(
+          this.options.input.slackPrettierFormat,
+          this.prettierLint,
+          'Prettier',
+        ),
+      );
+    }
+
+    if (this.options.input.stylua) {
+      fields.push(
+        this.getLintField(
+          this.options.input.slackStyLuaFormat,
+          this.styLuaLint,
+          'StyLua',
+        ),
+      );
+    }
+
+    return fields;
   }
 
   private async findChannel(name: string) {
@@ -290,42 +386,7 @@ export default class Slack {
       return Promise.reject(constants.ERROR.SLACK_NOT_RUNNING);
     }
 
-    const fields: MrkdwnElement[] = this.getGeneralFields();
-
-    if (this.options.input.busted) {
-      fields.push(Slack.getCheckingField('Busted passes'));
-    }
-
-    if (this.options.input.ldoc) {
-      fields.push(Slack.getCheckingField('LDoc', 'Generating...'));
-    }
-
-    if (this.options.input.luacheck) {
-      fields.push(
-        Slack.getCheckingLintField(
-          this.options.input.slackLuacheckFormat,
-          'Luacheck',
-        ),
-      );
-    }
-
-    if (this.options.input.prettier) {
-      fields.push(
-        Slack.getCheckingLintField(
-          this.options.input.slackPrettierFormat,
-          'Prettier',
-        ),
-      );
-    }
-
-    if (this.options.input.stylua) {
-      fields.push(
-        Slack.getCheckingLintField(
-          this.options.input.slackStyLuaFormat,
-          'StyLua',
-        ),
-      );
-    }
+    const fields: MrkdwnElement[] = this.getPostFields();
 
     core.debug('Posting Slack message...');
     const result = await this.app.client.chat.postMessage({
@@ -360,56 +421,7 @@ export default class Slack {
 
     this.updateStatus();
 
-    const fields: MrkdwnElement[] = this.getGeneralFields();
-
-    if (this.options.input.busted) {
-      if (this.isInProgress) {
-        fields.push(Slack.getCheckingField('Busted passes'));
-      } else if (this.bustedTest.total === 0) {
-        fields.push(Slack.getField('Busted passes', 'No tests'));
-      } else {
-        fields.push(
-          Slack.getField(
-            'Busted passes',
-            `${this.bustedTest.passed} / ${this.bustedTest.total} tests`,
-          ),
-        );
-      }
-    }
-
-    if (this.options.input.ldoc) {
-      fields.push(this.getLDocField());
-    }
-
-    if (this.options.input.luacheck) {
-      fields.push(
-        this.getLintField(
-          this.options.input.slackLuacheckFormat,
-          this.luacheckLint,
-          'Luacheck',
-        ),
-      );
-    }
-
-    if (this.options.input.prettier) {
-      fields.push(
-        this.getLintField(
-          this.options.input.slackPrettierFormat,
-          this.prettierLint,
-          'Prettier',
-        ),
-      );
-    }
-
-    if (this.options.input.stylua) {
-      fields.push(
-        this.getLintField(
-          this.options.input.slackStyLuaFormat,
-          this.styLuaLint,
-          'StyLua',
-        ),
-      );
-    }
+    const fields: MrkdwnElement[] = this.getUpdateFields();
 
     core.debug('Updating Slack message...');
     const result = await this.app.client.chat.update({
