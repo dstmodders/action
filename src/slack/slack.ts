@@ -156,56 +156,7 @@ export default class Slack {
     this.timestamp = '';
   }
 
-  private getGeneralFields(): MrkdwnElement[] {
-    return [this.getStatusField(), Slack.getRefField()];
-  }
-
-  private getPostFields(): MrkdwnElement[] {
-    const fields: MrkdwnElement[] = this.getGeneralFields();
-
-    if (this.options.input.busted) {
-      fields.push(Slack.getCheckingField('Busted passes'));
-    }
-
-    if (this.options.input.ldoc) {
-      fields.push(Slack.getCheckingField('LDoc', 'Generating...'));
-    }
-
-    if (this.options.input.luacheck) {
-      fields.push(
-        Slack.getCheckingLintField(
-          this.options.input.slackLuacheckFormat,
-          'Luacheck',
-        ),
-      );
-    }
-
-    if (this.options.input.prettier) {
-      fields.push(
-        Slack.getCheckingLintField(
-          this.options.input.slackPrettierFormat,
-          'Prettier',
-        ),
-      );
-    }
-
-    if (this.options.input.stylua) {
-      fields.push(
-        Slack.getCheckingLintField(
-          this.options.input.slackStyLuaFormat,
-          'StyLua',
-        ),
-      );
-    }
-
-    return fields;
-  }
-
-  private getStatusField(): MrkdwnElement {
-    return Slack.getField('Status', this.status.title);
-  }
-
-  private getUpdateFields(): MrkdwnElement[] {
+  private getFields(): MrkdwnElement[] {
     const fields: MrkdwnElement[] = this.getGeneralFields();
 
     if (this.options.input.busted) {
@@ -258,6 +209,14 @@ export default class Slack {
     }
 
     return fields;
+  }
+
+  private getGeneralFields(): MrkdwnElement[] {
+    return [this.getStatusField(), Slack.getRefField()];
+  }
+
+  private getStatusField(): MrkdwnElement {
+    return Slack.getField('Status', this.status.title);
   }
 
   private async findChannel(name: string) {
@@ -386,7 +345,7 @@ export default class Slack {
       return Promise.reject(constants.ERROR.SLACK_NOT_RUNNING);
     }
 
-    const fields: MrkdwnElement[] = this.getPostFields();
+    const fields: MrkdwnElement[] = this.getFields();
 
     core.debug('Posting Slack message...');
     const result = await this.app.client.chat.postMessage({
@@ -421,7 +380,7 @@ export default class Slack {
 
     this.updateStatus();
 
-    const fields: MrkdwnElement[] = this.getUpdateFields();
+    const fields: MrkdwnElement[] = this.getFields();
 
     core.debug('Updating Slack message...');
     const result = await this.app.client.chat.update({
