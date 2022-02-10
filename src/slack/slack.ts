@@ -1,12 +1,10 @@
 import * as core from '@actions/core';
-import * as github from '@actions/github';
-import { App, MrkdwnElement, SharedChannelItem } from '@slack/bolt';
-import * as helpers from '../helpers';
-import { LDoc, newEmptyLDoc } from '../ldoc';
-import { Lint, newEmptyLint } from '../lint';
-import { Test, newEmptyTest } from '../busted';
-import status, { Status } from '../status';
+import { App, SharedChannelItem } from '@slack/bolt';
 import { Input } from '../input';
+import { LDoc } from '../ldoc';
+import { Lint } from '../lint';
+import { Test } from '../busted';
+import Message from './message';
 import constants from '../constants';
 
 export interface SlackOptions {
@@ -21,202 +19,21 @@ export default class Slack {
 
   private channelID: string;
 
-  private isInProgress: boolean;
-
   private options: SlackOptions;
 
   private timestamp: string;
 
-  public bustedTest: Test;
-
   public isRunning: boolean;
 
-  public ldoc: LDoc;
-
-  public luacheckLint: Lint;
-
-  public prettierLint: Lint;
-
-  public status: Status;
-
-  public styLuaLint: Lint;
-
-  private static getCheckingField(
-    title: string,
-    value: string = 'Checking...',
-  ): MrkdwnElement {
-    return Slack.getField(title, value);
-  }
-
-  private static getCheckingLintField(
-    format: string,
-    name: string,
-    value: string = 'Checking...',
-  ): MrkdwnElement {
-    switch (format) {
-      case 'failures':
-        return Slack.getCheckingField(`${name} failures`, value);
-      case 'passes':
-        return Slack.getCheckingField(`${name} passes`, value);
-      default:
-        return Slack.getCheckingField(`${name} issues`, value);
-    }
-  }
-
-  private static getField(title: string, value: string): MrkdwnElement {
-    return {
-      type: 'mrkdwn',
-      text: `*${title}*\n${value}`,
-    };
-  }
-
-  private static getRef(): string {
-    const {
-      eventName,
-      issue,
-      repo: { owner, repo },
-      serverUrl,
-    } = github.context;
-
-    const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
-    let branchName: string = '';
-    let result: string = `<${repoUrl}|${owner}/${repo}>`;
-    let url: string = '';
-
-    switch (eventName) {
-      case 'pull_request':
-        if (issue.number > 0) {
-          url = `${repoUrl}/pull/${issue.number}`;
-          result = `${result}#<${url}|${issue.number}>`;
-        }
-        break;
-      case 'push':
-        branchName = helpers.getBranchName();
-        if (branchName.length > 0) {
-          url = `${repoUrl}/tree/${branchName}`;
-          result = `${result}@<${url}|${branchName}>`;
-        }
-        break;
-      default:
-        break;
-    }
-
-    return result;
-  }
-
-  private static getRefField(): MrkdwnElement {
-    const {
-      eventName,
-      issue,
-      repo: { owner, repo },
-      serverUrl,
-    } = github.context;
-
-    const repoUrl: string = `${serverUrl}/${owner}/${repo}`;
-    let url: string = '';
-
-    const refField: MrkdwnElement = Slack.getField(
-      'Commit',
-      `<${helpers.getCommitUrl()}|\`${helpers.getCommitShort()}\`>`,
-    );
-
-    switch (eventName) {
-      case 'pull_request':
-        if (issue.number > 0) {
-          url = `${repoUrl}/pull/${issue.number}`;
-          return Slack.getField('Pull Request', `<${url}|#${issue.number}>`);
-        }
-        return refField;
-      case 'push':
-        return Slack.getField(
-          'Commit',
-          `<${helpers.getCommitUrl()}|\`${helpers.getCommitShort()} (${helpers.getBranchName()})\`>`,
-        );
-      default:
-        return refField;
-    }
-  }
-
-  private static getText(): string {
-    return `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${Slack.getRef()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
-  }
+  public msg: Message;
 
   constructor(options: SlackOptions) {
     this.app = null;
-    this.bustedTest = newEmptyTest();
     this.channelID = '';
-    this.isInProgress = false;
     this.isRunning = false;
-    this.ldoc = newEmptyLDoc();
-    this.luacheckLint = newEmptyLint();
+    this.msg = new Message(options.input);
     this.options = options;
-    this.prettierLint = newEmptyLint();
-    this.status = status['in-progress'];
-    this.styLuaLint = newEmptyLint();
     this.timestamp = '';
-  }
-
-  private getFields(): MrkdwnElement[] {
-    const fields: MrkdwnElement[] = this.getGeneralFields();
-
-    if (this.options.input.busted) {
-      if (this.isInProgress) {
-        fields.push(Slack.getCheckingField('Busted passes'));
-      } else if (this.bustedTest.total === 0) {
-        fields.push(Slack.getField('Busted passes', 'No tests'));
-      } else {
-        fields.push(
-          Slack.getField(
-            'Busted passes',
-            `${this.bustedTest.passed} / ${this.bustedTest.total} tests`,
-          ),
-        );
-      }
-    }
-
-    if (this.options.input.ldoc) {
-      fields.push(this.getLDocField());
-    }
-
-    if (this.options.input.luacheck) {
-      fields.push(
-        this.getLintField(
-          this.options.input.slackLuacheckFormat,
-          this.luacheckLint,
-          'Luacheck',
-        ),
-      );
-    }
-
-    if (this.options.input.prettier) {
-      fields.push(
-        this.getLintField(
-          this.options.input.slackPrettierFormat,
-          this.prettierLint,
-          'Prettier',
-        ),
-      );
-    }
-
-    if (this.options.input.stylua) {
-      fields.push(
-        this.getLintField(
-          this.options.input.slackStyLuaFormat,
-          this.styLuaLint,
-          'StyLua',
-        ),
-      );
-    }
-
-    return fields;
-  }
-
-  private getGeneralFields(): MrkdwnElement[] {
-    return [this.getStatusField(), Slack.getRefField()];
-  }
-
-  private getStatusField(): MrkdwnElement {
-    return Slack.getField('Status', this.status.title);
   }
 
   private async findChannel(name: string) {
@@ -245,87 +62,6 @@ export default class Slack {
     return result;
   }
 
-  private getLDocField(): MrkdwnElement {
-    if (this.isInProgress) {
-      return Slack.getCheckingField('LDoc', 'Generating...');
-    }
-    return this.ldoc.exitCode === 0
-      ? Slack.getField('LDoc', 'Success')
-      : Slack.getField('LDoc', 'Failure');
-  }
-
-  private getLintField(
-    format: string,
-    result: Lint,
-    title: string,
-  ): MrkdwnElement {
-    if (this.isInProgress) {
-      return Slack.getCheckingLintField(format, title);
-    }
-
-    if (format === 'failures') {
-      if (result.files.length === 0) {
-        return Slack.getField(`${title} failures`, 'No files');
-      }
-      return Slack.getField(
-        `${title} failures`,
-        `${result.failed} / ${result.files.length} files`,
-      );
-    }
-
-    if (format === 'passes') {
-      if (result.files.length === 0) {
-        return Slack.getField(`${title} passes`, 'No files');
-      }
-      return Slack.getField(
-        `${title} passes`,
-        `${result.passed} / ${result.files.length} files`,
-      );
-    }
-
-    return Slack.getField(`${title} issues`, result.issues.toString());
-  }
-
-  private updateStatus(): void {
-    if (this.options.input.slackForceStatus.length > 0) {
-      if (this.isInProgress) {
-        this.status = status['in-progress'];
-        return;
-      }
-
-      switch (this.options.input.slackForceStatus) {
-        case 'success':
-          this.status = status.success;
-          return;
-        case 'failure':
-          this.status = status.failure;
-          return;
-        case 'cancelled':
-          this.status = status.cancelled;
-          return;
-        case 'skipped':
-          this.status = status.skipped;
-          return;
-        default:
-          this.status = status['in-progress'];
-          return;
-      }
-    }
-
-    const isFailed =
-      this.bustedTest.failed > 0 ||
-      this.ldoc.exitCode > 0 ||
-      this.luacheckLint.issues > 0 ||
-      this.prettierLint.failed > 0 ||
-      this.styLuaLint.failed > 0;
-
-    if (!this.isInProgress && isFailed) {
-      this.status = status.failure;
-    } else if (!this.isInProgress && !isFailed) {
-      this.status = status.success;
-    }
-  }
-
   private async updateLintOrTest(result: Lint | Test): Promise<void> {
     try {
       if (await this.update()) {
@@ -340,25 +76,58 @@ export default class Slack {
     }
   }
 
+  public async updateBusted(result: Test): Promise<void> {
+    await this.msg.updateBusted(result);
+    return this.updateLintOrTest(result);
+  }
+
+  public async updateLDoc(result: LDoc): Promise<void> {
+    await this.msg.updateLDoc(result);
+    try {
+      if (await this.update()) {
+        core.info('');
+        core.info('Updated Slack message');
+      }
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  public async updateLuacheck(result: Lint): Promise<void> {
+    await this.msg.updateLuacheck(result);
+    return this.updateLintOrTest(result);
+  }
+
+  public async updatePrettier(result: Lint): Promise<void> {
+    await this.msg.updatePrettier(result);
+    return this.updateLintOrTest(result);
+  }
+
+  public async updateStyLua(result: Lint): Promise<void> {
+    await this.msg.updateStyLua(result);
+    return this.updateLintOrTest(result);
+  }
+
   private async post(): Promise<boolean> {
     if (!this.app) {
       return Promise.reject(constants.ERROR.SLACK_NOT_RUNNING);
     }
 
-    const fields: MrkdwnElement[] = this.getFields();
+    this.msg.updateStatus();
 
     core.debug('Posting Slack message...');
     const result = await this.app.client.chat.postMessage({
       channel: this.channelID,
-      text: Slack.getText(),
+      text: Message.getText(),
       token: this.options.token,
       attachments: [
         {
-          color: this.options.input.slackColorDefault,
+          color: this.msg.status.color,
           blocks: [
             {
               type: 'section',
-              fields,
+              fields: this.msg.getFields(),
             },
           ],
         },
@@ -378,23 +147,21 @@ export default class Slack {
       return Promise.reject(constants.ERROR.SLACK_NOT_RUNNING);
     }
 
-    this.updateStatus();
-
-    const fields: MrkdwnElement[] = this.getFields();
+    this.msg.updateStatus();
 
     core.debug('Updating Slack message...');
     const result = await this.app.client.chat.update({
       channel: this.channelID,
-      text: Slack.getText(),
+      text: Message.getText(),
       token: this.options.token,
       ts: this.timestamp,
       attachments: [
         {
-          color: this.status.color,
+          color: this.msg.status.color,
           blocks: [
             {
               type: 'section',
-              fields,
+              fields: this.msg.getFields(),
             },
           ],
         },
@@ -407,44 +174,6 @@ export default class Slack {
     }
 
     return true;
-  }
-
-  public async updateBusted(result: Test): Promise<void> {
-    this.bustedTest = result;
-    return this.updateLintOrTest(result);
-  }
-
-  public async updateLDoc(result: LDoc): Promise<void> {
-    this.ldoc = result;
-
-    if (!this.app || !this.isRunning) {
-      return Promise.reject(new Error(constants.ERROR.SLACK_NOT_RUNNING));
-    }
-
-    try {
-      if (await this.update()) {
-        core.info('');
-        core.info('Updated Slack message');
-      }
-      return Promise.resolve();
-    } catch (error) {
-      return Promise.reject(error);
-    }
-  }
-
-  public async updateLuacheck(result: Lint): Promise<void> {
-    this.luacheckLint = result;
-    return this.updateLintOrTest(result);
-  }
-
-  public async updatePrettier(result: Lint): Promise<void> {
-    this.prettierLint = result;
-    return this.updateLintOrTest(result);
-  }
-
-  public async updateStyLua(result: Lint): Promise<void> {
-    this.styLuaLint = result;
-    return this.updateLintOrTest(result);
   }
 
   public async start(): Promise<void | Error> {
@@ -470,7 +199,7 @@ export default class Slack {
         token: this.options.token,
       });
       await this.app.start(3000);
-      this.isInProgress = true;
+      this.msg.isInProgress = true;
       this.isRunning = true;
       core.info('Started Slack app');
       await this.findChannel(this.options.channel);
@@ -496,7 +225,7 @@ export default class Slack {
     core.debug('Stopping Slack app...');
 
     try {
-      this.isInProgress = false;
+      this.msg.isInProgress = false;
       if (await this.update()) {
         core.info('Updated Slack message');
       }
