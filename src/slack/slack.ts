@@ -36,30 +36,36 @@ export default class Slack {
     this.timestamp = '';
   }
 
-  private async findChannel(name: string) {
+  private async findChannel(name: string): Promise<Object | null> {
     if (!this.app) {
       return null;
     }
 
     core.debug(`Finding #${name} channel...`);
-    const result = await this.app.client.conversations.list({
-      token: this.options.token,
-    });
 
-    if (!result.channels) {
-      return result;
-    }
+    try {
+      const result = await this.app.client.conversations.list({
+        token: this.options.token,
+      });
 
-    // eslint-disable-next-line no-restricted-syntax
-    for (const channel of result.channels as SharedChannelItem[]) {
-      if (channel.name === name) {
-        this.channelID = channel.id;
-        core.debug(`Found channel ID: ${this.channelID}`);
-        core.info(`Found #${channel.name} channel`);
+      if (!result.channels) {
+        return result;
       }
+
+      // eslint-disable-next-line no-restricted-syntax
+      for (const channel of result.channels as SharedChannelItem[]) {
+        if (channel.name === name) {
+          this.channelID = channel.id;
+          core.debug(`Found channel ID: ${this.channelID}`);
+          core.info(`Found #${channel.name} channel`);
+          return result;
+        }
+      }
+    } catch (error) {
+      return Promise.reject(error);
     }
 
-    return result;
+    throw new Error(constants.ERROR.SLACK_CHANNEL_NOT_FOUND);
   }
 
   private async updateLintOrTest(result: Lint | Test): Promise<void> {
