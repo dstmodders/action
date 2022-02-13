@@ -9,6 +9,7 @@ import { Output, set as outputSet } from './output';
 import { Slack } from './slack';
 import { getEnv } from './helpers';
 import { check as checkVersions } from './versions';
+import constants from './constants';
 
 async function run(input: Input) {
   const output: Output = <Output>{};
@@ -20,8 +21,7 @@ async function run(input: Input) {
   });
 
   if (slack == null) {
-    core.setFailed('Failed to initialize Slack');
-    return;
+    throw new Error(constants.ERROR.SLACK_INIT_FAILURE);
   }
 
   try {

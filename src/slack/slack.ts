@@ -191,9 +191,7 @@ export default class Slack {
       this.options.signingSecret.length === 0 ||
       this.options.token.length === 0
     ) {
-      throw new Error(
-        'Slack app token or signing secret not found. Did you forget to set SLACK_SIGNING_SECRET and/or SLACK_TOKEN environment variables?',
-      );
+      throw new Error(constants.ERROR.SLACK_TOKEN_NOT_FOUND);
     }
 
     core.startGroup('Run Slack app');
