@@ -10,24 +10,14 @@ import { Slack } from './slack';
 import { getEnv } from './helpers';
 import { check as checkVersions } from './versions';
 
-async function run() {
+async function run(input: Input) {
   const output: Output = <Output>{};
-  let input: Input = <Input>{};
-  let slack: Slack | null = null;
-
-  try {
-    input = await inputGet();
-    slack = new Slack({
-      channel: getEnv('SLACK_CHANNEL', input.slack),
-      signingSecret: getEnv('SLACK_SIGNING_SECRET', input.slack),
-      token: getEnv('SLACK_TOKEN', input.slack),
-      input,
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      core.setFailed(error.message);
-    }
-  }
+  const slack: Slack | null = new Slack({
+    channel: getEnv('SLACK_CHANNEL', input.slack),
+    signingSecret: getEnv('SLACK_SIGNING_SECRET', input.slack),
+    token: getEnv('SLACK_TOKEN', input.slack),
+    input,
+  });
 
   if (slack == null) {
     core.setFailed('Failed to initialize Slack');
@@ -79,4 +69,12 @@ async function run() {
   }
 }
 
-run();
+inputGet()
+  .then((input) => {
+    run(input).catch((err) => {
+      core.setFailed(err.message);
+    });
+  })
+  .catch((err) => {
+    core.setFailed(err.message);
+  });
