@@ -4,6 +4,7 @@
 coverage/
 lib/
 node_modules/
+readme/
 
 .dockerignore
 .editorconfig

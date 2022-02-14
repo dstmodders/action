@@ -117,7 +117,7 @@ See [action.yml](action.yml) to learn more.
 
 The action can send a Slack notification as well.
 
-![Slack notification](slack-notification.png 'Slack notification')
+![Slack (Notification)](readme/slack-notification.png 'Slack (Notification)')
 
 ### 1. Add your app
 
@@ -129,7 +129,7 @@ required "Bot Token Scopes" in "OAuth & Permissions":
 - `chat:write`
 - `chat:write.public`
 
-![Bot Token Scopes](slack-bot-token-scopes.png 'Bot Token Scopes')
+![Slack (Bot Token Scopes)](readme/slack-bot-token-scopes.png 'Slack (Bot Token Scopes)')
 
 ### 2. Enable notification
 
@@ -167,7 +167,7 @@ For example:
 
 ### 3. Enjoy
 
-![Slack notifications](slack-notifications.png 'Slack notifications')
+![Slack (Notifications)](readme/slack-notifications.png 'Slack (Notifications)')
 
 ## License
 
