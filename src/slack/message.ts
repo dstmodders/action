@@ -5,10 +5,10 @@ import { LDoc, newEmptyLDoc } from '../ldoc';
 import { Lint, newEmptyLint } from '../lint';
 import { Test, newEmptyTest } from '../busted';
 import status, { Status } from '../status';
-import { Input } from '../input';
+import Slack from './slack';
 
 export default class Message {
-  private input: Input;
+  private slack: Slack;
 
   private timestamp: string;
 
@@ -122,13 +122,13 @@ export default class Message {
     }
   }
 
-  constructor(input: Input) {
+  constructor(slack: Slack) {
     this.bustedTest = newEmptyTest();
-    this.input = input;
     this.isInProgress = false;
     this.ldoc = newEmptyLDoc();
     this.luacheckLint = newEmptyLint();
     this.prettierLint = newEmptyLint();
+    this.slack = slack;
     this.status = status['in-progress'];
     this.styLuaLint = newEmptyLint();
     this.timestamp = '';
@@ -190,7 +190,7 @@ export default class Message {
   public getFields(): MrkdwnElement[] {
     const fields: MrkdwnElement[] = this.getGeneralFields();
 
-    if (this.input.busted) {
+    if (this.slack.options.input.busted) {
       if (this.isInProgress) {
         fields.push(Message.getCheckingField('Busted passes'));
       } else if (this.bustedTest.total === 0) {
@@ -205,34 +205,34 @@ export default class Message {
       }
     }
 
-    if (this.input.ldoc) {
+    if (this.slack.options.input.ldoc) {
       fields.push(this.getLDocField());
     }
 
-    if (this.input.luacheck) {
+    if (this.slack.options.input.luacheck) {
       fields.push(
         this.getLintField(
-          this.input.slackLuacheckFormat,
+          this.slack.options.input.slackLuacheckFormat,
           this.luacheckLint,
           'Luacheck',
         ),
       );
     }
 
-    if (this.input.prettier) {
+    if (this.slack.options.input.prettier) {
       fields.push(
         this.getLintField(
-          this.input.slackPrettierFormat,
+          this.slack.options.input.slackPrettierFormat,
           this.prettierLint,
           'Prettier',
         ),
       );
     }
 
-    if (this.input.stylua) {
+    if (this.slack.options.input.stylua) {
       fields.push(
         this.getLintField(
-          this.input.slackStyLuaFormat,
+          this.slack.options.input.slackStyLuaFormat,
           this.styLuaLint,
           'StyLua',
         ),
@@ -243,13 +243,13 @@ export default class Message {
   }
 
   public updateStatus(): void {
-    if (this.input.slackForceStatus.length > 0) {
+    if (this.slack.options.input.slackForceStatus.length > 0) {
       if (this.isInProgress) {
         this.status = status['in-progress'];
         return;
       }
 
-      switch (this.input.slackForceStatus) {
+      switch (this.slack.options.input.slackForceStatus) {
         case 'success':
           this.status = status.success;
           return;

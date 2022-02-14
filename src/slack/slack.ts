@@ -19,19 +19,19 @@ export default class Slack {
 
   private channelID: string;
 
-  private options: SlackOptions;
-
   private timestamp: string;
 
   public isRunning: boolean;
 
   public msg: Message;
 
+  public options: SlackOptions;
+
   constructor(options: SlackOptions) {
     this.app = null;
     this.channelID = '';
     this.isRunning = false;
-    this.msg = new Message(options.input);
+    this.msg = new Message(this);
     this.options = options;
     this.timestamp = '';
   }
