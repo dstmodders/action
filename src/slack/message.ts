@@ -10,8 +10,6 @@ import Slack from './slack';
 export default class Message {
   private slack: Slack;
 
-  private timestamp: string;
-
   public bustedTest: Test;
 
   public isInProgress: boolean;
@@ -27,6 +25,8 @@ export default class Message {
   public styLuaLint: Lint;
 
   public text: string;
+
+  public timestamp: string;
 
   private static getCheckingField(
     title: string,
