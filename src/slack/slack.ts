@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { App, SharedChannelItem } from '@slack/bolt';
-import { ChatPostMessageArguments } from '@slack/web-api';
+import { ChatPostMessageArguments, ChatUpdateArguments } from '@slack/web-api';
 import { Input } from '../input';
 import { LDoc } from '../ldoc';
 import { Lint } from '../lint';
@@ -71,7 +71,7 @@ export default class Slack {
 
   private async updateLintOrTest(result: Lint | Test): Promise<void> {
     try {
-      if (await this.update()) {
+      if (await this.update(this.msg, this.timestamp)) {
         if (result.output.length > 0) {
           core.info('');
         }
@@ -91,7 +91,7 @@ export default class Slack {
   public async updateLDoc(result: LDoc): Promise<void> {
     await this.msg.updateLDoc(result);
     try {
-      if (await this.update()) {
+      if (await this.update(this.msg, this.timestamp)) {
         core.info('');
         core.info('Updated Slack message');
       }
@@ -155,38 +155,48 @@ export default class Slack {
     return '';
   }
 
-  public async update(): Promise<boolean> {
+  public async update(msg: Message, ts: string): Promise<string> {
     if (!this.app || !this.isRunning) {
       return Promise.reject(constants.ERROR.SLACK_NOT_RUNNING);
     }
 
-    this.msg.updateStatus();
+    msg.updateStatus();
 
-    core.debug('Updating Slack message...');
-    const result = await this.app.client.chat.update({
+    core.debug(`Updating Slack message (timestamp: ${ts})...`);
+    const fields = msg.getFields();
+
+    let options: ChatUpdateArguments = {
       channel: this.channelID,
       text: Message.getText(),
       token: this.options.token,
-      ts: this.timestamp,
-      attachments: [
-        {
-          color: this.msg.status.color,
-          blocks: [
-            {
-              type: 'section',
-              fields: this.msg.getFields(),
-            },
-          ],
-        },
-      ],
-    });
+      ts,
+    };
 
-    if (typeof result.ts === 'string') {
-      core.debug(`Timestamp: ${result.ts}`);
-      this.timestamp = result.ts;
+    if (fields.length > 0) {
+      options = {
+        ...options,
+        attachments: [
+          {
+            color: msg.status.color,
+            blocks: [{ type: 'section', fields }],
+          },
+        ],
+      };
+    } else {
+      options = {
+        ...options,
+        attachments: [],
+      };
     }
 
-    return true;
+    const result = await this.app.client.chat.update(options);
+    if (typeof result.ts === 'string' && result.ts.length > 0) {
+      core.info('Updated Slack message');
+      this.timestamp = result.ts;
+      return result.ts;
+    }
+
+    return '';
   }
 
   public async start(): Promise<void | Error> {
@@ -237,7 +247,7 @@ export default class Slack {
 
     try {
       this.msg.isInProgress = false;
-      if (await this.update()) {
+      if (await this.update(this.msg, this.timestamp)) {
         core.info('Updated Slack message');
       }
       await this.app.stop();
