@@ -46,6 +46,7 @@ Slack {
       "output": "",
       "passed": 0,
     },
+    "text": "GitHub Actions <https://github.com/user/repository/actions/runs/1|CI / Test> job in <https://github.com/user/repository|user/repository> by <https://github.com/user|user>",
     "timestamp": "",
   },
   "options": Object {

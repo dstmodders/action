@@ -26,6 +26,8 @@ export default class Message {
 
   public styLuaLint: Lint;
 
+  public text: string;
+
   private static getCheckingField(
     title: string,
     value: string = 'Checking...',
@@ -131,6 +133,7 @@ export default class Message {
     this.slack = slack;
     this.status = status['in-progress'];
     this.styLuaLint = newEmptyLint();
+    this.text = `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${Message.getRef()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
     this.timestamp = '';
   }
 
@@ -181,10 +184,6 @@ export default class Message {
     }
 
     return Message.getField(`${title} issues`, result.issues.toString());
-  }
-
-  public static getText(): string {
-    return `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${Message.getRef()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
   }
 
   public getFields(): MrkdwnElement[] {
@@ -240,6 +239,10 @@ export default class Message {
     }
 
     return fields;
+  }
+
+  public getText(): string {
+    return this.text;
   }
 
   public updateStatus(): void {

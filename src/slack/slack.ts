@@ -128,7 +128,7 @@ export default class Slack {
 
     let options: ChatPostMessageArguments = {
       channel: this.channelID,
-      text: Message.getText(),
+      text: msg.getText(),
       token: this.options.token,
     };
 
@@ -167,7 +167,7 @@ export default class Slack {
 
     let options: ChatUpdateArguments = {
       channel: this.channelID,
-      text: Message.getText(),
+      text: msg.getText(),
       token: this.options.token,
       ts,
     };
