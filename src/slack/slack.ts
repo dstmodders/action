@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import { App, SharedChannelItem } from '@slack/bolt';
+import { ChatPostMessageArguments } from '@slack/web-api';
 import { Input } from '../input';
 import { LDoc } from '../ldoc';
 import { Lint } from '../lint';
@@ -115,37 +116,43 @@ export default class Slack {
     return this.updateLintOrTest(result);
   }
 
-  private async post(): Promise<boolean> {
-    if (!this.app) {
+  public async post(msg: Message): Promise<string> {
+    if (!this.app || !this.isRunning) {
       return Promise.reject(constants.ERROR.SLACK_NOT_RUNNING);
     }
 
-    this.msg.updateStatus();
+    msg.updateStatus();
 
     core.debug('Posting Slack message...');
-    const result = await this.app.client.chat.postMessage({
+    const fields = msg.getFields();
+
+    let options: ChatPostMessageArguments = {
       channel: this.channelID,
       text: Message.getText(),
       token: this.options.token,
-      attachments: [
-        {
-          color: this.msg.status.color,
-          blocks: [
-            {
-              type: 'section',
-              fields: this.msg.getFields(),
-            },
-          ],
-        },
-      ],
-    });
+    };
 
-    if (typeof result.ts === 'string') {
-      core.debug(`Timestamp: ${result.ts}`);
-      this.timestamp = result.ts;
+    if (fields.length > 0) {
+      options = {
+        ...options,
+        attachments: [
+          {
+            color: msg.status.color,
+            blocks: [{ type: 'section', fields }],
+          },
+        ],
+      };
     }
 
-    return true;
+    const result = await this.app.client.chat.postMessage(options);
+    if (typeof result.ts === 'string' && result.ts.length > 0) {
+      core.info('Posted Slack message');
+      core.debug(`Timestamp: ${result.ts}`);
+      this.timestamp = result.ts;
+      return result.ts;
+    }
+
+    return '';
   }
 
   public async update(): Promise<boolean> {
@@ -208,7 +215,7 @@ export default class Slack {
       core.info('Started Slack app');
       await this.findChannel(this.options.channel);
       if (this.channelID.length > 0) {
-        if (await this.post()) {
+        if (await this.post(this.msg)) {
           core.info('Posted Slack message');
         }
       }
