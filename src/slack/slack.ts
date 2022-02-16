@@ -218,6 +218,7 @@ export default class Slack {
       await this.findChannel(this.options.channel);
       this.isRunning = true;
       core.endGroup();
+
       return Promise.resolve();
     } catch (error) {
       this.isRunning = false;
@@ -233,17 +234,13 @@ export default class Slack {
 
     core.startGroup('Stop Slack app');
     core.debug('Stopping Slack app...');
-
     try {
-      this.msg.isInProgress = false;
-      await this.msg.update();
-      if (this.msg.timestamp.length > 0) {
-        core.info('Updated Slack message');
-      }
       await this.app.stop();
-      this.isRunning = false;
       core.info('Stopped Slack app');
+
+      this.isRunning = false;
       core.endGroup();
+
       return Promise.resolve();
     } catch (error) {
       core.endGroup();

@@ -25,16 +25,19 @@ async function run(input: Input) {
   }
 
   try {
+    // check versions
     if (!input.ignoreCheckVersions) {
       output.versions = await checkVersions();
     }
 
+    // start Slack
     if (input.slack) {
       await slack.start();
       slack.msg.isInProgress = true;
       await slack.msg.post();
     }
 
+    // run
     if (input.busted) {
       output.busted = await busted.run(input, slack);
     }
@@ -55,18 +58,24 @@ async function run(input: Input) {
       output.stylua = await stylua.run(input, slack);
     }
 
+    // stop Slack
     if (input.slack) {
+      slack.msg.isInProgress = false;
+      await slack.msg.update();
       await slack.stop();
     }
 
+    // output
     await outputSet(input, output);
   } catch (error) {
     if (input.slack) {
+      slack.msg.isInProgress = false;
+      await slack.msg.update();
       await slack.stop();
     }
 
     if (error instanceof Error) {
-      core.setFailed(error.message);
+      throw error;
     }
   }
 }
