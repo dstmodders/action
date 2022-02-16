@@ -299,4 +299,14 @@ export default class Message {
   public async updateStyLua(result: Lint): Promise<void> {
     this.styLuaLint = result;
   }
+
+  public async post(): Promise<string> {
+    this.timestamp = await this.slack.post(this);
+    return this.timestamp;
+  }
+
+  public async update(): Promise<string> {
+    this.timestamp = await this.slack.update(this);
+    return this.timestamp;
+  }
 }

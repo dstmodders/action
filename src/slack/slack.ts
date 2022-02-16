@@ -68,7 +68,7 @@ export default class Slack {
 
   private async updateLintOrTest(result: Lint | Test): Promise<void> {
     try {
-      this.msg.timestamp = await this.update(this.msg);
+      await this.msg.update();
       if (this.msg.timestamp.length > 0) {
         if (result.output.length > 0) {
           core.info('');
@@ -89,7 +89,7 @@ export default class Slack {
   public async updateLDoc(result: LDoc): Promise<void> {
     await this.msg.updateLDoc(result);
     try {
-      this.msg.timestamp = await this.update(this.msg);
+      await this.msg.update();
       if (this.msg.timestamp.length > 0) {
         core.info('');
         core.info('Updated Slack message');
@@ -218,7 +218,7 @@ export default class Slack {
       core.info('Started Slack app');
       await this.findChannel(this.options.channel);
       if (this.channelID.length > 0) {
-        this.msg.timestamp = await this.post(this.msg);
+        await this.msg.post();
         if (this.msg.timestamp.length > 0) {
           core.info('Posted Slack message');
         }
@@ -241,7 +241,7 @@ export default class Slack {
 
     try {
       this.msg.isInProgress = false;
-      this.msg.timestamp = await this.update(this.msg);
+      await this.msg.update();
       if (this.msg.timestamp.length > 0) {
         core.info('Updated Slack message');
       }
