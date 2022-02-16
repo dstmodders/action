@@ -120,8 +120,6 @@ export default class Slack {
       return Promise.reject(constants.ERROR.SLACK_NOT_RUNNING);
     }
 
-    msg.updateStatus();
-
     core.debug('Posting Slack message...');
     const fields = msg.getFields();
 
@@ -136,7 +134,7 @@ export default class Slack {
         ...options,
         attachments: [
           {
-            color: msg.status.color,
+            color: msg.getStatus().color,
             blocks: [{ type: 'section', fields }],
           },
         ],
@@ -158,8 +156,6 @@ export default class Slack {
       return Promise.reject(constants.ERROR.SLACK_NOT_RUNNING);
     }
 
-    msg.updateStatus();
-
     core.debug(`Updating Slack message (timestamp: ${msg.timestamp})...`);
     const fields = msg.getFields();
 
@@ -175,7 +171,7 @@ export default class Slack {
         ...options,
         attachments: [
           {
-            color: msg.status.color,
+            color: msg.getStatus().color,
             blocks: [{ type: 'section', fields }],
           },
         ],

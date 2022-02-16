@@ -20,8 +20,6 @@ export default class Message {
 
   public prettierLint: Lint;
 
-  public status: Status;
-
   public styLuaLint: Lint;
 
   public text: string;
@@ -131,7 +129,6 @@ export default class Message {
     this.luacheckLint = newEmptyLint();
     this.prettierLint = newEmptyLint();
     this.slack = slack;
-    this.status = status['in-progress'];
     this.styLuaLint = newEmptyLint();
     this.text = `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${Message.getRef()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
     this.timestamp = '';
@@ -142,7 +139,7 @@ export default class Message {
   }
 
   private getStatusField(): MrkdwnElement {
-    return Message.getField('Status', this.status.title);
+    return Message.getField('Status', this.getStatus().title);
   }
 
   private getLDocField(): MrkdwnElement {
@@ -241,33 +238,23 @@ export default class Message {
     return fields;
   }
 
-  public getText(): string {
-    return this.text;
-  }
-
-  public updateStatus(): void {
+  public getStatus(): Status {
     if (this.slack.options.input.slackForceStatus.length > 0) {
       if (this.isInProgress) {
-        this.status = status['in-progress'];
-        return;
+        return status['in-progress'];
       }
 
       switch (this.slack.options.input.slackForceStatus) {
         case 'success':
-          this.status = status.success;
-          return;
+          return status.success;
         case 'failure':
-          this.status = status.failure;
-          return;
+          return status.failure;
         case 'cancelled':
-          this.status = status.cancelled;
-          return;
+          return status.cancelled;
         case 'skipped':
-          this.status = status.skipped;
-          return;
+          return status.skipped;
         default:
-          this.status = status['in-progress'];
-          return;
+          return status['in-progress'];
       }
     }
 
@@ -279,34 +266,37 @@ export default class Message {
       this.styLuaLint.failed > 0;
 
     if (!this.isInProgress && isFailed) {
-      this.status = status.failure;
-    } else if (!this.isInProgress && !isFailed) {
-      this.status = status.success;
+      return status.failure;
     }
+
+    if (!this.isInProgress && !isFailed) {
+      return status.success;
+    }
+
+    return status['in-progress'];
+  }
+
+  public getText(): string {
+    return this.text;
   }
 
   public async updateBusted(result: Test): Promise<void> {
     this.bustedTest = result;
-    this.updateStatus();
   }
 
   public async updateLDoc(result: LDoc): Promise<void> {
     this.ldoc = result;
-    this.updateStatus();
   }
 
   public async updateLuacheck(result: Lint): Promise<void> {
     this.luacheckLint = result;
-    this.updateStatus();
   }
 
   public async updatePrettier(result: Lint): Promise<void> {
     this.prettierLint = result;
-    this.updateStatus();
   }
 
   public async updateStyLua(result: Lint): Promise<void> {
     this.styLuaLint = result;
-    this.updateStatus();
   }
 }

@@ -35,10 +35,6 @@ Slack {
       "passed": 0,
     },
     "slack": [Circular],
-    "status": Object {
-      "color": "#dcad04",
-      "title": "In Progress",
-    },
     "styLuaLint": Object {
       "failed": 0,
       "files": Array [],
