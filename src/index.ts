@@ -7,8 +7,8 @@ import * as stylua from './stylua';
 import { Input, get as inputGet } from './input';
 import { Output, set as outputSet } from './output';
 import { Slack } from './slack';
-import { getEnv } from './helpers';
 import { check as checkVersions } from './versions';
+import { getEnv } from './helpers';
 import constants from './constants';
 
 async function run(input: Input) {
@@ -31,6 +31,8 @@ async function run(input: Input) {
 
     if (input.slack) {
       await slack.start();
+      slack.msg.isInProgress = true;
+      await slack.msg.post();
     }
 
     if (input.busted) {

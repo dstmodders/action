@@ -204,28 +204,23 @@ export default class Slack {
       throw new Error(constants.ERROR.SLACK_TOKEN_NOT_FOUND);
     }
 
-    core.startGroup('Run Slack app');
+    core.startGroup('Start Slack app');
     core.debug('Starting Slack app...');
-
     try {
       this.app = new App({
         signingSecret: this.options.signingSecret,
         token: this.options.token,
       });
+
       await this.app.start(3000);
-      this.msg.isInProgress = true;
-      this.isRunning = true;
       core.info('Started Slack app');
+
       await this.findChannel(this.options.channel);
-      if (this.channelID.length > 0) {
-        await this.msg.post();
-        if (this.msg.timestamp.length > 0) {
-          core.info('Posted Slack message');
-        }
-      }
+      this.isRunning = true;
       core.endGroup();
       return Promise.resolve();
     } catch (error) {
+      this.isRunning = false;
       core.endGroup();
       return Promise.reject(error);
     }
