@@ -1,3 +1,4 @@
 import Slack, { SlackOptions } from './slack';
+import Message from './message';
 
-export { Slack, SlackOptions };
+export { Message, Slack, SlackOptions };
