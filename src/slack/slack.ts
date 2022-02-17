@@ -40,7 +40,6 @@ export default class Slack {
     }
 
     core.debug(`Finding #${name} channel...`);
-
     try {
       const result = await this.app.client.conversations.list({
         token: this.options.token,
@@ -68,13 +67,10 @@ export default class Slack {
 
   private async updateLintOrTest(result: Lint | Test): Promise<void> {
     try {
-      await this.msg.update();
-      if (this.msg.timestamp.length > 0) {
-        if (result.output.length > 0) {
-          core.info('');
-        }
-        core.info('Updated Slack message');
+      if (result.output.length > 0) {
+        core.info('');
       }
+      await this.msg.update();
       return Promise.resolve();
     } catch (error) {
       return Promise.reject(error);
@@ -89,11 +85,8 @@ export default class Slack {
   public async updateLDoc(result: LDoc): Promise<void> {
     await this.msg.updateLDoc(result);
     try {
+      core.info('');
       await this.msg.update();
-      if (this.msg.timestamp.length > 0) {
-        core.info('');
-        core.info('Updated Slack message');
-      }
       return Promise.resolve();
     } catch (error) {
       return Promise.reject(error);
