@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import { Input } from './input';
-import { Slack } from './slack';
+import { Message } from './slack';
 
 export interface Test {
   exitCode: number;
@@ -156,14 +156,14 @@ export async function test(input: Input): Promise<Test> {
 
 export async function run(
   input: Input,
-  slack: Slack | null = null,
+  msg: Message | null = null,
 ): Promise<Test> {
   try {
     const title = 'Busted';
     core.startGroup(`Run ${title}`);
     const result: Test = await test(input);
-    if (input.slack && slack) {
-      await slack.updateBusted(result);
+    if (input.slack && msg) {
+      await msg.updateBusted(result);
     }
     core.endGroup();
     return result;

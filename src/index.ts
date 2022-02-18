@@ -5,8 +5,8 @@ import * as luacheck from './luacheck';
 import * as prettier from './prettier';
 import * as stylua from './stylua';
 import { Input, get as inputGet } from './input';
+import { Message, Slack } from './slack';
 import { Output, set as outputSet } from './output';
-import { Slack } from './slack';
 import { check as checkVersions } from './versions';
 import { getEnv } from './helpers';
 import constants from './constants';
@@ -20,6 +20,8 @@ async function run(input: Input) {
     input,
   });
 
+  let msg: Message | null = null;
+
   if (slack == null) {
     throw new Error(constants.ERROR.SLACK_INIT_FAILURE);
   }
@@ -32,36 +34,39 @@ async function run(input: Input) {
 
     // start Slack
     if (input.slack) {
+      msg = new Message(slack);
+      msg.isInProgress = true;
       await slack.start();
-      slack.msg.isInProgress = true;
-      await slack.msg.post();
+      await msg.post();
     }
 
     // run
     if (input.busted) {
-      output.busted = await busted.run(input, slack);
+      output.busted = await busted.run(input, msg);
     }
 
     if (input.ldoc) {
-      output.ldoc = await ldoc.run(input, slack);
+      output.ldoc = await ldoc.run(input, msg);
     }
 
     if (input.luacheck) {
-      output.luacheck = await luacheck.run(input, slack);
+      output.luacheck = await luacheck.run(input, msg);
     }
 
     if (input.prettier) {
-      output.prettier = await prettier.run(input, slack);
+      output.prettier = await prettier.run(input, msg);
     }
 
     if (input.stylua) {
-      output.stylua = await stylua.run(input, slack);
+      output.stylua = await stylua.run(input, msg);
     }
 
     // stop Slack
     if (input.slack) {
-      slack.msg.isInProgress = false;
-      await slack.msg.update();
+      if (msg !== null) {
+        msg.isInProgress = false;
+        await msg.update();
+      }
       await slack.stop();
     }
 
@@ -69,8 +74,10 @@ async function run(input: Input) {
     await outputSet(input, output);
   } catch (error) {
     if (input.slack) {
-      slack.msg.isInProgress = false;
-      await slack.msg.update();
+      if (msg !== null) {
+        msg.isInProgress = false;
+        await msg.update();
+      }
       await slack.stop();
     }
 

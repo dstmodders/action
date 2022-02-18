@@ -1,7 +1,5 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import { Slack } from './slack';
-import { Input } from './input';
 import {
   Lint,
   LintAnnotation,
@@ -12,6 +10,8 @@ import {
   printResult,
   setOutput as outputSet,
 } from './lint';
+import { Message } from './slack';
+import { Input } from './input';
 
 export async function getVersion(): Promise<string> {
   let result: string = '';
@@ -106,13 +106,13 @@ export async function lint(input: Input): Promise<Lint> {
 
 export async function run(
   input: Input,
-  slack: Slack | null = null,
+  msg: Message | null = null,
 ): Promise<Lint> {
   try {
     core.startGroup('Run StyLua');
     const result: Lint = await lint(input);
-    if (input.slack && slack) {
-      await slack.updateStyLua(result);
+    if (input.slack && msg) {
+      await msg.updateStyLua(result);
     }
     core.endGroup();
     return result;

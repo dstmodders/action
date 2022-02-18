@@ -5,46 +5,6 @@ Slack {
   "app": null,
   "channelID": "",
   "isRunning": false,
-  "msg": Message {
-    "bustedTest": Object {
-      "exitCode": 0,
-      "failed": 0,
-      "output": "",
-      "passed": 0,
-      "time": "",
-      "total": 0,
-    },
-    "isInProgress": false,
-    "ldoc": Object {
-      "exitCode": 0,
-      "stderr": "",
-      "stdout": "",
-    },
-    "luacheckLint": Object {
-      "failed": 0,
-      "files": Array [],
-      "issues": 0,
-      "output": "",
-      "passed": 0,
-    },
-    "prettierLint": Object {
-      "failed": 0,
-      "files": Array [],
-      "issues": 0,
-      "output": "",
-      "passed": 0,
-    },
-    "slack": [Circular],
-    "styLuaLint": Object {
-      "failed": 0,
-      "files": Array [],
-      "issues": 0,
-      "output": "",
-      "passed": 0,
-    },
-    "text": "GitHub Actions <https://github.com/user/repository/actions/runs/1|CI / Test> job in <https://github.com/user/repository|user/repository> by <https://github.com/user|user>",
-    "timestamp": "",
-  },
   "options": Object {
     "channel": "test",
     "input": Object {

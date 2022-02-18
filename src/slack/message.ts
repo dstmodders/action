@@ -1,3 +1,4 @@
+import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { MrkdwnElement } from '@slack/bolt';
 import * as helpers from '../helpers';
@@ -122,18 +123,6 @@ export default class Message {
     }
   }
 
-  constructor(slack: Slack) {
-    this.bustedTest = newEmptyTest();
-    this.isInProgress = false;
-    this.ldoc = newEmptyLDoc();
-    this.luacheckLint = newEmptyLint();
-    this.prettierLint = newEmptyLint();
-    this.slack = slack;
-    this.styLuaLint = newEmptyLint();
-    this.text = `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${Message.getRef()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
-    this.timestamp = '';
-  }
-
   private getGeneralFields(): MrkdwnElement[] {
     return [this.getStatusField(), Message.getRefField()];
   }
@@ -181,6 +170,30 @@ export default class Message {
     }
 
     return Message.getField(`${title} issues`, result.issues.toString());
+  }
+
+  private async updateLintOrTest(result: Lint | Test): Promise<void> {
+    try {
+      if (result.output.length > 0) {
+        core.info('');
+      }
+      await this.update();
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  constructor(slack: Slack) {
+    this.bustedTest = newEmptyTest();
+    this.isInProgress = false;
+    this.ldoc = newEmptyLDoc();
+    this.luacheckLint = newEmptyLint();
+    this.prettierLint = newEmptyLint();
+    this.slack = slack;
+    this.styLuaLint = newEmptyLint();
+    this.text = `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${Message.getRef()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
+    this.timestamp = '';
   }
 
   public getFields(): MrkdwnElement[] {
@@ -282,22 +295,33 @@ export default class Message {
 
   public async updateBusted(result: Test): Promise<void> {
     this.bustedTest = result;
+    return this.updateLintOrTest(result);
   }
 
   public async updateLDoc(result: LDoc): Promise<void> {
     this.ldoc = result;
+    try {
+      core.info('');
+      await this.update();
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
+    }
   }
 
   public async updateLuacheck(result: Lint): Promise<void> {
     this.luacheckLint = result;
+    return this.updateLintOrTest(result);
   }
 
   public async updatePrettier(result: Lint): Promise<void> {
     this.prettierLint = result;
+    return this.updateLintOrTest(result);
   }
 
   public async updateStyLua(result: Lint): Promise<void> {
     this.styLuaLint = result;
+    return this.updateLintOrTest(result);
   }
 
   public async post(): Promise<string> {

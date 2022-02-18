@@ -2,9 +2,6 @@ import * as core from '@actions/core';
 import { App, SharedChannelItem } from '@slack/bolt';
 import { ChatPostMessageArguments, ChatUpdateArguments } from '@slack/web-api';
 import { Input } from '../input';
-import { LDoc } from '../ldoc';
-import { Lint } from '../lint';
-import { Test } from '../busted';
 import Message from './message';
 import constants from '../constants';
 
@@ -22,15 +19,12 @@ export default class Slack {
 
   public isRunning: boolean;
 
-  public msg: Message;
-
   public options: SlackOptions;
 
   constructor(options: SlackOptions) {
     this.app = null;
     this.channelID = '';
     this.isRunning = false;
-    this.msg = new Message(this);
     this.options = options;
   }
 
@@ -63,49 +57,6 @@ export default class Slack {
     }
 
     throw new Error(constants.ERROR.SLACK_CHANNEL_NOT_FOUND);
-  }
-
-  private async updateLintOrTest(result: Lint | Test): Promise<void> {
-    try {
-      if (result.output.length > 0) {
-        core.info('');
-      }
-      await this.msg.update();
-      return Promise.resolve();
-    } catch (error) {
-      return Promise.reject(error);
-    }
-  }
-
-  public async updateBusted(result: Test): Promise<void> {
-    await this.msg.updateBusted(result);
-    return this.updateLintOrTest(result);
-  }
-
-  public async updateLDoc(result: LDoc): Promise<void> {
-    await this.msg.updateLDoc(result);
-    try {
-      core.info('');
-      await this.msg.update();
-      return Promise.resolve();
-    } catch (error) {
-      return Promise.reject(error);
-    }
-  }
-
-  public async updateLuacheck(result: Lint): Promise<void> {
-    await this.msg.updateLuacheck(result);
-    return this.updateLintOrTest(result);
-  }
-
-  public async updatePrettier(result: Lint): Promise<void> {
-    await this.msg.updatePrettier(result);
-    return this.updateLintOrTest(result);
-  }
-
-  public async updateStyLua(result: Lint): Promise<void> {
-    await this.msg.updateStyLua(result);
-    return this.updateLintOrTest(result);
   }
 
   public async post(msg: Message): Promise<string> {

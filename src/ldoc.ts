@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import { Input } from './input';
-import { Slack } from './slack';
+import { Message } from './slack';
 
 export interface LDoc {
   exitCode: number;
@@ -116,13 +116,13 @@ export async function generate(input: Input): Promise<LDoc> {
 
 export async function run(
   input: Input,
-  slack: Slack | null = null,
+  msg: Message | null = null,
 ): Promise<LDoc> {
   try {
     core.startGroup('Run LDoc');
     const result: LDoc = await generate(input);
-    if (input.slack && slack) {
-      await slack.updateLDoc(result);
+    if (input.slack && msg) {
+      await msg.updateLDoc(result);
     }
     core.endGroup();
     return result;
