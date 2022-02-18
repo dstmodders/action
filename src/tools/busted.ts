@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import { Input } from './input';
-import { Message } from './slack';
+import { Input } from '../input';
+import { Message } from '../slack';
 
 export interface Test {
   exitCode: number;

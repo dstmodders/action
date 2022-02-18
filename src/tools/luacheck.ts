@@ -1,17 +1,17 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import { AnnotationProperties } from '@actions/core';
 import {
   Lint,
   LintAnnotation,
-  compareToAnnotations,
   getFiles,
   newEmptyAnnotations,
   newEmptyLint,
   printResult,
   setOutput as outputSet,
 } from './lint';
-import { Input } from './input';
-import { Message } from './slack';
+import { Input } from '../input';
+import { Message } from '../slack';
 
 export async function getVersion(): Promise<string> {
   let result: string = '';
@@ -19,8 +19,8 @@ export async function getVersion(): Promise<string> {
   try {
     let output: string = '';
 
-    core.debug('Getting Prettier version...');
-    await exec.exec('prettier', ['--version'], {
+    core.debug('Getting Luacheck version...');
+    await exec.exec('luacheck', ['--version'], {
       silent: true,
       listeners: {
         stdout: (data: Buffer) => {
@@ -29,7 +29,8 @@ export async function getVersion(): Promise<string> {
       },
     });
 
-    result = output.trim();
+    const lines: string[] = output.trim().split(/\r\n|\r|\n/);
+    result = lines[0].replace('Luacheck: ', '');
     core.debug(result);
   } catch (error) {
     return Promise.reject(error);
@@ -42,7 +43,7 @@ export async function lint(input: Input): Promise<Lint> {
   const result: Lint = newEmptyLint();
 
   try {
-    const files = await getFiles('.prettierignore', '{md,xml,yml}');
+    const files = await getFiles('.luacheckignore', 'lua');
     if (files.length === 0) {
       core.info('No files found');
       return result;
@@ -56,11 +57,17 @@ export async function lint(input: Input): Promise<Lint> {
     // eslint-disable-next-line no-restricted-syntax
     for (const file of files) {
       const annotations: [LintAnnotation] = newEmptyAnnotations();
+      let output: string = '';
 
       // eslint-disable-next-line no-await-in-loop
-      exitCode = await exec.exec('prettier', ['--check', '--no-color', file], {
+      exitCode = await exec.exec('luacheck', ['--formatter=plain', file], {
         ignoreReturnCode: true,
         silent: true,
+        listeners: {
+          stdout: (data: Buffer) => {
+            output += data.toString();
+          },
+        },
       });
 
       core.debug(`${file}, exit code ${exitCode}`);
@@ -68,35 +75,45 @@ export async function lint(input: Input): Promise<Lint> {
       if (exitCode === 0) {
         result.passed += 1;
       } else {
-        let changed: string = '';
-
-        // eslint-disable-next-line no-await-in-loop
-        await exec.exec(`prettier ${file}"`, [], {
-          ignoreReturnCode: true,
-          silent: true,
-          listeners: {
-            stdout: (data: Buffer) => {
-              changed += data.toString();
-            },
-          },
-        });
-
         result.failed += 1;
         result.output += `${file}\n`;
 
-        // eslint-disable-next-line no-await-in-loop
-        result.issues += await compareToAnnotations(annotations, file, changed);
-      }
+        const lines: string[] = output.trim().split(/\r\n|\r|\n/);
+        let matches: RegExpMatchArray | null = [];
+        // eslint-disable-next-line no-restricted-syntax
+        for (const line of lines) {
+          matches = line.match(/(.*):(\d*):(\d*): (.*)/i);
+          if (matches) {
+            const [, , startLine, startColumn, message] = matches;
+            if (
+              file.length > 0 &&
+              startLine.length > 0 &&
+              startColumn.length > 0 &&
+              message.length > 0
+            ) {
+              result.issues += 1;
+              annotations.push({
+                properties: <AnnotationProperties>{
+                  startLine: Number(startLine),
+                  startColumn: Number(startColumn),
+                  file,
+                },
+                message,
+              });
+            }
+          }
+        }
 
-      result.files.push({
-        path: file,
-        annotations,
-        exitCode,
-      });
+        result.files.push({
+          path: file,
+          annotations,
+          exitCode,
+        });
+      }
     }
 
     result.output = result.output.trim();
-    printResult(input, result, 'Prettier');
+    printResult(input, result, 'Luacheck');
   } catch (error) {
     return Promise.reject(error);
   }
@@ -109,10 +126,10 @@ export async function run(
   msg: Message | null = null,
 ): Promise<Lint> {
   try {
-    core.startGroup('Run Prettier');
+    core.startGroup('Run Luacheck');
     const result: Lint = await lint(input);
     if (input.slack && msg) {
-      await msg.updatePrettier(result);
+      await msg.updateLuacheck(result);
     }
     core.endGroup();
     return result;
@@ -123,5 +140,5 @@ export async function run(
 }
 
 export async function setOutput(l: Lint): Promise<void> {
-  await outputSet('prettier', l);
+  await outputSet('luacheck', l);
 }

@@ -1,17 +1,17 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import { AnnotationProperties } from '@actions/core';
 import {
   Lint,
   LintAnnotation,
+  compareToAnnotations,
   getFiles,
   newEmptyAnnotations,
   newEmptyLint,
   printResult,
   setOutput as outputSet,
 } from './lint';
-import { Input } from './input';
-import { Message } from './slack';
+import { Message } from '../slack';
+import { Input } from '../input';
 
 export async function getVersion(): Promise<string> {
   let result: string = '';
@@ -19,8 +19,8 @@ export async function getVersion(): Promise<string> {
   try {
     let output: string = '';
 
-    core.debug('Getting Luacheck version...');
-    await exec.exec('luacheck', ['--version'], {
+    core.debug('Getting StyLua version...');
+    await exec.exec('stylua', ['--version'], {
       silent: true,
       listeners: {
         stdout: (data: Buffer) => {
@@ -29,8 +29,7 @@ export async function getVersion(): Promise<string> {
       },
     });
 
-    const lines: string[] = output.trim().split(/\r\n|\r|\n/);
-    result = lines[0].replace('Luacheck: ', '');
+    result = output.trim().replace('stylua ', '');
     core.debug(result);
   } catch (error) {
     return Promise.reject(error);
@@ -43,7 +42,7 @@ export async function lint(input: Input): Promise<Lint> {
   const result: Lint = newEmptyLint();
 
   try {
-    const files = await getFiles('.luacheckignore', 'lua');
+    const files = await getFiles('.styluaignore', 'lua');
     if (files.length === 0) {
       core.info('No files found');
       return result;
@@ -57,17 +56,11 @@ export async function lint(input: Input): Promise<Lint> {
     // eslint-disable-next-line no-restricted-syntax
     for (const file of files) {
       const annotations: [LintAnnotation] = newEmptyAnnotations();
-      let output: string = '';
 
       // eslint-disable-next-line no-await-in-loop
-      exitCode = await exec.exec('luacheck', ['--formatter=plain', file], {
+      exitCode = await exec.exec('stylua', ['--check', file], {
         ignoreReturnCode: true,
         silent: true,
-        listeners: {
-          stdout: (data: Buffer) => {
-            output += data.toString();
-          },
-        },
       });
 
       core.debug(`${file}, exit code ${exitCode}`);
@@ -75,45 +68,35 @@ export async function lint(input: Input): Promise<Lint> {
       if (exitCode === 0) {
         result.passed += 1;
       } else {
+        let changed: string = '';
+
+        // eslint-disable-next-line no-await-in-loop
+        await exec.exec(`/bin/bash -c "cat ${file} | stylua -"`, [], {
+          ignoreReturnCode: true,
+          silent: true,
+          listeners: {
+            stdout: (data: Buffer) => {
+              changed += data.toString();
+            },
+          },
+        });
+
         result.failed += 1;
         result.output += `${file}\n`;
 
-        const lines: string[] = output.trim().split(/\r\n|\r|\n/);
-        let matches: RegExpMatchArray | null = [];
-        // eslint-disable-next-line no-restricted-syntax
-        for (const line of lines) {
-          matches = line.match(/(.*):(\d*):(\d*): (.*)/i);
-          if (matches) {
-            const [, , startLine, startColumn, message] = matches;
-            if (
-              file.length > 0 &&
-              startLine.length > 0 &&
-              startColumn.length > 0 &&
-              message.length > 0
-            ) {
-              result.issues += 1;
-              annotations.push({
-                properties: <AnnotationProperties>{
-                  startLine: Number(startLine),
-                  startColumn: Number(startColumn),
-                  file,
-                },
-                message,
-              });
-            }
-          }
-        }
-
-        result.files.push({
-          path: file,
-          annotations,
-          exitCode,
-        });
+        // eslint-disable-next-line no-await-in-loop
+        result.issues += await compareToAnnotations(annotations, file, changed);
       }
+
+      result.files.push({
+        path: file,
+        annotations,
+        exitCode,
+      });
     }
 
     result.output = result.output.trim();
-    printResult(input, result, 'Luacheck');
+    printResult(input, result, 'StyLua');
   } catch (error) {
     return Promise.reject(error);
   }
@@ -126,10 +109,10 @@ export async function run(
   msg: Message | null = null,
 ): Promise<Lint> {
   try {
-    core.startGroup('Run Luacheck');
+    core.startGroup('Run StyLua');
     const result: Lint = await lint(input);
     if (input.slack && msg) {
-      await msg.updateLuacheck(result);
+      await msg.updateStyLua(result);
     }
     core.endGroup();
     return result;
@@ -140,5 +123,5 @@ export async function run(
 }
 
 export async function setOutput(l: Lint): Promise<void> {
-  await outputSet('luacheck', l);
+  await outputSet('stylua', l);
 }

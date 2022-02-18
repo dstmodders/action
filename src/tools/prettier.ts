@@ -10,8 +10,8 @@ import {
   printResult,
   setOutput as outputSet,
 } from './lint';
-import { Message } from './slack';
-import { Input } from './input';
+import { Input } from '../input';
+import { Message } from '../slack';
 
 export async function getVersion(): Promise<string> {
   let result: string = '';
@@ -19,8 +19,8 @@ export async function getVersion(): Promise<string> {
   try {
     let output: string = '';
 
-    core.debug('Getting StyLua version...');
-    await exec.exec('stylua', ['--version'], {
+    core.debug('Getting Prettier version...');
+    await exec.exec('prettier', ['--version'], {
       silent: true,
       listeners: {
         stdout: (data: Buffer) => {
@@ -29,7 +29,7 @@ export async function getVersion(): Promise<string> {
       },
     });
 
-    result = output.trim().replace('stylua ', '');
+    result = output.trim();
     core.debug(result);
   } catch (error) {
     return Promise.reject(error);
@@ -42,7 +42,7 @@ export async function lint(input: Input): Promise<Lint> {
   const result: Lint = newEmptyLint();
 
   try {
-    const files = await getFiles('.styluaignore', 'lua');
+    const files = await getFiles('.prettierignore', '{md,xml,yml}');
     if (files.length === 0) {
       core.info('No files found');
       return result;
@@ -58,7 +58,7 @@ export async function lint(input: Input): Promise<Lint> {
       const annotations: [LintAnnotation] = newEmptyAnnotations();
 
       // eslint-disable-next-line no-await-in-loop
-      exitCode = await exec.exec('stylua', ['--check', file], {
+      exitCode = await exec.exec('prettier', ['--check', '--no-color', file], {
         ignoreReturnCode: true,
         silent: true,
       });
@@ -71,7 +71,7 @@ export async function lint(input: Input): Promise<Lint> {
         let changed: string = '';
 
         // eslint-disable-next-line no-await-in-loop
-        await exec.exec(`/bin/bash -c "cat ${file} | stylua -"`, [], {
+        await exec.exec(`prettier ${file}"`, [], {
           ignoreReturnCode: true,
           silent: true,
           listeners: {
@@ -96,7 +96,7 @@ export async function lint(input: Input): Promise<Lint> {
     }
 
     result.output = result.output.trim();
-    printResult(input, result, 'StyLua');
+    printResult(input, result, 'Prettier');
   } catch (error) {
     return Promise.reject(error);
   }
@@ -109,10 +109,10 @@ export async function run(
   msg: Message | null = null,
 ): Promise<Lint> {
   try {
-    core.startGroup('Run StyLua');
+    core.startGroup('Run Prettier');
     const result: Lint = await lint(input);
     if (input.slack && msg) {
-      await msg.updateStyLua(result);
+      await msg.updatePrettier(result);
     }
     core.endGroup();
     return result;
@@ -123,5 +123,5 @@ export async function run(
 }
 
 export async function setOutput(l: Lint): Promise<void> {
-  await outputSet('stylua', l);
+  await outputSet('prettier', l);
 }

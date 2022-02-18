@@ -1,14 +1,16 @@
 import * as core from '@actions/core';
-import * as busted from './busted';
-import * as ldoc from './ldoc';
-import * as luacheck from './luacheck';
-import * as prettier from './prettier';
-import * as stylua from './stylua';
 import * as versions from './versions';
+import {
+  LDoc,
+  Lint,
+  Test,
+  busted,
+  ldoc,
+  luacheck,
+  prettier,
+  stylua,
+} from './tools';
 import { Input } from './input';
-import { LDoc } from './ldoc';
-import { Lint } from './lint';
-import { Test } from './busted';
 import { Versions } from './versions';
 
 export interface Output {

@@ -3,8 +3,8 @@ import fs from 'fs';
 import glob from 'glob';
 import ignore from 'ignore';
 import { AnnotationProperties } from '@actions/core';
-import { Input } from './input';
-import { compare, DiffEntry } from './diff';
+import { compare, DiffEntry } from '../diff';
+import { Input } from '../input';
 
 export interface LintAnnotation {
   action?: string;

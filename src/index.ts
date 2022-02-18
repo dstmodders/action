@@ -1,12 +1,8 @@
 import * as core from '@actions/core';
-import * as busted from './busted';
-import * as ldoc from './ldoc';
-import * as luacheck from './luacheck';
-import * as prettier from './prettier';
-import * as stylua from './stylua';
 import { Input, get as inputGet } from './input';
 import { Message, Slack } from './slack';
 import { Output, set as outputSet } from './output';
+import { busted, ldoc, luacheck, prettier, stylua } from './tools';
 import { check as checkVersions } from './versions';
 import { getEnv } from './helpers';
 import constants from './constants';

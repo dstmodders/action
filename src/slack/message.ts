@@ -2,9 +2,8 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { MrkdwnElement } from '@slack/bolt';
 import * as helpers from '../helpers';
-import { LDoc, newEmptyLDoc } from '../ldoc';
-import { Lint, newEmptyLint } from '../lint';
-import { Test, newEmptyTest } from '../busted';
+import * as tools from '../tools';
+import { LDoc, Lint, Test } from '../tools';
 import status, { Status } from '../status';
 import Slack from './slack';
 
@@ -185,13 +184,13 @@ export default class Message {
   }
 
   constructor(slack: Slack) {
-    this.bustedTest = newEmptyTest();
+    this.bustedTest = tools.busted.newEmptyTest();
     this.isInProgress = false;
-    this.ldoc = newEmptyLDoc();
-    this.luacheckLint = newEmptyLint();
-    this.prettierLint = newEmptyLint();
+    this.ldoc = tools.ldoc.newEmptyLDoc();
+    this.luacheckLint = tools.lint.newEmptyLint();
+    this.prettierLint = tools.lint.newEmptyLint();
     this.slack = slack;
-    this.styLuaLint = newEmptyLint();
+    this.styLuaLint = tools.lint.newEmptyLint();
     this.text = `GitHub Actions <${helpers.getWorkflowUrl()}|${helpers.getWorkflow()} / ${helpers.getJob()}> job in ${Message.getRef()} by <${helpers.getActorUrl()}|${helpers.getActor()}>`;
     this.timestamp = '';
   }
