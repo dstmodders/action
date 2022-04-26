@@ -10,7 +10,7 @@
     "@actions/core": "^1.7.0",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^5.0.1",
-    "@slack/bolt": "^3.8.1",
+    "@slack/bolt": "^3.11.0",
     "diff": "^5.0.0",
     "glob": "^8.0.1",
     "ignore": "^5.2.0"
