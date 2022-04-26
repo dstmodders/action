@@ -29,7 +29,7 @@
     "ts-jest": "^27.1.2",
     "typescript": "^4.5.4",
     "yarn-audit-fix": "^9.0.6",
-    "yarn-deduplicate": "^3.1.0"
+    "yarn-deduplicate": "^5.0.0"
   },
   "homepage": "https://github.com/dstmodders/action#readme",
   "keywords": [
