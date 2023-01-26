@@ -1,8 +1,8 @@
 # action
 
-[![Codecov](https://img.shields.io/codecov/c/github/dstmodders/action.svg)](https://codecov.io/gh/dstmodders/action)
-[![Code Climate](https://img.shields.io/codeclimate/maintainability/dstmodders/action)](https://codeclimate.com/github/dstmodders/action)
-[![Dependencies](https://img.shields.io/librariesio/github/dstmodders/action)](https://libraries.io/github/dstmodders/action)
+[![Codecov]](https://codecov.io/gh/dstmodders/action)
+[![Code Climate]](https://codeclimate.com/github/dstmodders/action)
+[![Libraries.io]](https://libraries.io/github/dstmodders/action)
 
 ## Overview
 
@@ -175,9 +175,12 @@ Released under the [MIT License](https://opensource.org/licenses/MIT).
 
 [action.yml]: action.yml
 [busted]: https://olivinelabs.com/busted/
+[code climate]: https://img.shields.io/codeclimate/maintainability/dstmodders/action
+[codecov]: https://img.shields.io/codecov/c/github/dstmodders/action?token=YqVSJxK4eY
 [docker-dst-mod]: https://github.com/dstmodders/docker-dst-mod
 [don't starve together]: https://www.klei.com/games/dont-starve-together
 [github actions]: https://github.com/features/actions
+[libraries.io]: https://img.shields.io/librariesio/github/dstmodders/action
 [luacheck]: https://github.com/mpeterv/luacheck
 [prettier]: https://prettier.io/
 [slack api apps]: https://api.slack.com/apps/
