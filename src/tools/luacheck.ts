@@ -79,7 +79,7 @@ export async function lint(input: Input): Promise<Lint> {
         result.output += `${file}\n`;
 
         const lines: string[] = output.trim().split(/\r\n|\r|\n/);
-        let matches: RegExpMatchArray | null = [];
+        let matches: RegExpMatchArray | null = [''];
         // eslint-disable-next-line no-restricted-syntax
         for (const line of lines) {
           matches = line.match(/(.*):(\d*):(\d*): (.*)/i);
