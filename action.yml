@@ -1,6 +1,10 @@
-name: 'Depressed DST Modders GitHub Action'
+name: 'DST Modding Tools'
 description: "Run different modding tools for Don't Starve Together game"
 author: 'Depressed DST Modders'
+branding:
+  icon: 'settings'
+  color: 'gray-dark'
+
 inputs:
   busted:
     default: 'false'
@@ -76,6 +80,7 @@ inputs:
     default: 'false'
     description: 'Ignore set output step (disables all action output)'
     required: false
+
 outputs:
   busted-version:
     description: 'Busted version'
@@ -138,6 +143,7 @@ outputs:
     description: 'Number of total issues found by StyLua'
   stylua-output:
     description: 'The list of all failed files by StyLua'
+
 runs:
   using: 'docker'
   image: 'Dockerfile'
