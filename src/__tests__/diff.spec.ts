@@ -1,5 +1,6 @@
-import expect from 'expect';
 import * as diff from '../diff';
+
+const { expect } = require('expect');
 
 describe('diff', () => {
   describe('compare()', () => {

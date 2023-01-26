@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`input get() when all inputs are set as default values should match the snapshot 1`] = `
-Object {
+{
   "busted": false,
   "ignoreCheckVersions": false,
   "ignoreFailure": false,

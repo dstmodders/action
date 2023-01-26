@@ -1,6 +1,7 @@
-import expect from 'expect';
 import * as input from '../input';
 import { Input } from '../input';
+
+const { expect } = require('expect');
 
 describe('input', () => {
   describe('get()', () => {

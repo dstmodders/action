@@ -1,6 +1,7 @@
 import * as github from '@actions/github';
-import expect from 'expect';
 import helpers from '../helpers';
+
+const { expect } = require('expect');
 
 describe('helpers', () => {
   const ENV = process.env;

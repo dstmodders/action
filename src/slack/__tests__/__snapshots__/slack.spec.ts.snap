@@ -5,9 +5,9 @@ Slack {
   "app": null,
   "channelID": "",
   "isRunning": false,
-  "options": Object {
+  "options": {
     "channel": "test",
-    "input": Object {
+    "input": {
       "busted": false,
       "ignoreCheckVersions": false,
       "ignoreFailure": false,

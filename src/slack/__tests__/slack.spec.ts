@@ -1,7 +1,8 @@
 import * as github from '@actions/github';
-import expect from 'expect';
 import { Slack, SlackOptions } from '../index';
 import { Input } from '../../input';
+
+const { expect } = require('expect');
 
 describe('slack', () => {
   const ENV = process.env;
