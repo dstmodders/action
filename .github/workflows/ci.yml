@@ -24,8 +24,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
       - name: Set a job-wide environment variables
-        run: |
-          echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+        run: echo "BRANCH_NAME=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
       - name: Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
@@ -41,12 +40,12 @@ jobs:
           NODE_ENV: production
       - name: Prepare success Slack notification
         if: ${{ success() }}
-        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> $GITHUB_ENV
+        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> "$GITHUB_ENV"
         env:
           SLACK_CUSTOM_PAYLOAD: '{"channel":"{{ SLACK_CHANNEL }}","attachments":[{"color":"{{ SLACK_COLOR_SUCCESS }}","fallback":"GitHub Actions {{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }} job of {{ GITHUB_REPOSITORY }}@{{ BRANCH_NAME }} by {{ GITHUB_ACTOR }} has passed","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"GitHub Actions <https://github.com/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }}|{{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }}> job of <https://github.com/{{ GITHUB_REPOSITORY }}|{{ GITHUB_REPOSITORY }}>@<https://github.com/{{ GITHUB_REPOSITORY }}/tree/{{ BRANCH_NAME }}|{{ BRANCH_NAME }}> by <https://github.com/{{ GITHUB_ACTOR }}|{{ GITHUB_ACTOR }}> has passed"}}]}]}'
       - name: Prepare failure Slack notification
         if: ${{ failure() }}
-        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> $GITHUB_ENV
+        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> "$GITHUB_ENV"
         env:
           SLACK_CUSTOM_PAYLOAD: '{"channel":"{{ SLACK_CHANNEL }}","attachments":[{"color":"{{ SLACK_COLOR_FAILURE }}","fallback":"GitHub Actions {{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }} job of {{ GITHUB_REPOSITORY }}@{{ BRANCH_NAME }} by {{ GITHUB_ACTOR }} has failed","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"GitHub Actions <https://github.com/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }}|{{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }}> job of <https://github.com/{{ GITHUB_REPOSITORY }}|{{ GITHUB_REPOSITORY }}>@<https://github.com/{{ GITHUB_REPOSITORY }}/tree/{{ BRANCH_NAME }}|{{ BRANCH_NAME }}> by <https://github.com/{{ GITHUB_ACTOR }}|{{ GITHUB_ACTOR }}> has failed"}}]}]}'
       - name: Send Slack notification
@@ -59,8 +58,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
       - name: Set a job-wide environment variables
-        run: |
-          echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+        run: echo "BRANCH_NAME=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
       - name: Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
@@ -74,12 +72,12 @@ jobs:
         run: yarn lint
       - name: Prepare success Slack notification
         if: ${{ success() }}
-        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> $GITHUB_ENV
+        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> "$GITHUB_ENV"
         env:
           SLACK_CUSTOM_PAYLOAD: '{"channel":"{{ SLACK_CHANNEL }}","attachments":[{"color":"{{ SLACK_COLOR_SUCCESS }}","fallback":"GitHub Actions {{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }} job of {{ GITHUB_REPOSITORY }}@{{ BRANCH_NAME }} by {{ GITHUB_ACTOR }} has passed","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"GitHub Actions <https://github.com/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }}|{{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }}> job of <https://github.com/{{ GITHUB_REPOSITORY }}|{{ GITHUB_REPOSITORY }}>@<https://github.com/{{ GITHUB_REPOSITORY }}/tree/{{ BRANCH_NAME }}|{{ BRANCH_NAME }}> by <https://github.com/{{ GITHUB_ACTOR }}|{{ GITHUB_ACTOR }}> has passed"}}]}]}'
       - name: Prepare failure Slack notification
         if: ${{ failure() }}
-        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> $GITHUB_ENV
+        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> "$GITHUB_ENV"
         env:
           SLACK_CUSTOM_PAYLOAD: '{"channel":"{{ SLACK_CHANNEL }}","attachments":[{"color":"{{ SLACK_COLOR_FAILURE }}","fallback":"GitHub Actions {{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }} job of {{ GITHUB_REPOSITORY }}@{{ BRANCH_NAME }} by {{ GITHUB_ACTOR }} has failed","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"GitHub Actions <https://github.com/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }}|{{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }}> job of <https://github.com/{{ GITHUB_REPOSITORY }}|{{ GITHUB_REPOSITORY }}>@<https://github.com/{{ GITHUB_REPOSITORY }}/tree/{{ BRANCH_NAME }}|{{ BRANCH_NAME }}> by <https://github.com/{{ GITHUB_ACTOR }}|{{ GITHUB_ACTOR }}> has failed"}}]}]}'
       - name: Send Slack notification
@@ -92,8 +90,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
       - name: Set a job-wide environment variables
-        run: |
-          echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+        run: echo "BRANCH_NAME=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
       - name: Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
@@ -123,12 +120,12 @@ jobs:
           SUCCESS: ${{ steps.test.outcome == 'success' }}
       - name: Prepare success Slack notification
         if: ${{ success() }}
-        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> $GITHUB_ENV
+        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> "$GITHUB_ENV"
         env:
           SLACK_CUSTOM_PAYLOAD: '{"channel":"{{ SLACK_CHANNEL }}","attachments":[{"color":"{{ SLACK_COLOR_SUCCESS }}","fallback":"GitHub Actions {{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }} job of {{ GITHUB_REPOSITORY }}@{{ BRANCH_NAME }} by {{ GITHUB_ACTOR }} has passed","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"GitHub Actions <https://github.com/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }}|{{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }}> job of <https://github.com/{{ GITHUB_REPOSITORY }}|{{ GITHUB_REPOSITORY }}>@<https://github.com/{{ GITHUB_REPOSITORY }}/tree/{{ BRANCH_NAME }}|{{ BRANCH_NAME }}> by <https://github.com/{{ GITHUB_ACTOR }}|{{ GITHUB_ACTOR }}> has passed"}}]}]}'
       - name: Prepare failure Slack notification
         if: ${{ failure() }}
-        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> $GITHUB_ENV
+        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> "$GITHUB_ENV"
         env:
           SLACK_CUSTOM_PAYLOAD: '{"channel":"{{ SLACK_CHANNEL }}","attachments":[{"color":"{{ SLACK_COLOR_FAILURE }}","fallback":"GitHub Actions {{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }} job of {{ GITHUB_REPOSITORY }}@{{ BRANCH_NAME }} by {{ GITHUB_ACTOR }} has failed","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"GitHub Actions <https://github.com/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }}|{{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }}> job of <https://github.com/{{ GITHUB_REPOSITORY }}|{{ GITHUB_REPOSITORY }}>@<https://github.com/{{ GITHUB_REPOSITORY }}/tree/{{ BRANCH_NAME }}|{{ BRANCH_NAME }}> by <https://github.com/{{ GITHUB_ACTOR }}|{{ GITHUB_ACTOR }}> has failed"}}]}]}'
       - name: Send Slack notification
