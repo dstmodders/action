@@ -66,32 +66,39 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v4
-      - name: Set a job-wide environment variables
-        run: echo "BRANCH_NAME=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
       - name: Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
+        id: node
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install
+      - name: Send Slack notification
+        uses: codedsolar/slack-action@v1.2.0
+        if: ${{ github.event_name != 'pull_request' }}
+        id: slack
+        with:
+          fields: |
+            {STATUS}
+            {REF}
+            Node.js: ${{ steps.node.outputs.node-version }}
+          status: in-progress
+      - name: Enable corepack
+        run: corepack enable
+      - name: Install dependencies
         run: yarn install --ignore-scripts
         env:
           NODE_ENV: development
       - name: Lint
-        continue-on-error: true
         run: yarn lint
-      - name: Prepare success Slack notification
-        if: ${{ success() }}
-        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> "$GITHUB_ENV"
-        env:
-          SLACK_CUSTOM_PAYLOAD: '{"channel":"{{ SLACK_CHANNEL }}","attachments":[{"color":"{{ SLACK_COLOR_SUCCESS }}","fallback":"GitHub Actions {{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }} job of {{ GITHUB_REPOSITORY }}@{{ BRANCH_NAME }} by {{ GITHUB_ACTOR }} has passed","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"GitHub Actions <https://github.com/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }}|{{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }}> job of <https://github.com/{{ GITHUB_REPOSITORY }}|{{ GITHUB_REPOSITORY }}>@<https://github.com/{{ GITHUB_REPOSITORY }}/tree/{{ BRANCH_NAME }}|{{ BRANCH_NAME }}> by <https://github.com/{{ GITHUB_ACTOR }}|{{ GITHUB_ACTOR }}> has passed"}}]}]}'
-      - name: Prepare failure Slack notification
-        if: ${{ failure() }}
-        run: echo "SLACK_CUSTOM_PAYLOAD=${SLACK_CUSTOM_PAYLOAD}" >> "$GITHUB_ENV"
-        env:
-          SLACK_CUSTOM_PAYLOAD: '{"channel":"{{ SLACK_CHANNEL }}","attachments":[{"color":"{{ SLACK_COLOR_FAILURE }}","fallback":"GitHub Actions {{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }} job of {{ GITHUB_REPOSITORY }}@{{ BRANCH_NAME }} by {{ GITHUB_ACTOR }} has failed","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"GitHub Actions <https://github.com/{{ GITHUB_REPOSITORY }}/actions/runs/{{ GITHUB_RUN_ID }}|{{ GITHUB_WORKFLOW }} / ${{ github.job }} / Node.js {{ NODE_VERSION }}> job of <https://github.com/{{ GITHUB_REPOSITORY }}|{{ GITHUB_REPOSITORY }}>@<https://github.com/{{ GITHUB_REPOSITORY }}/tree/{{ BRANCH_NAME }}|{{ BRANCH_NAME }}> by <https://github.com/{{ GITHUB_ACTOR }}|{{ GITHUB_ACTOR }}> has failed"}}]}]}'
-      - name: Send Slack notification
-        if: ${{ env.SLACK_CUSTOM_PAYLOAD && always() }}
-        uses: Ilshidur/action-slack@2.1.0
+      - name: Update Slack notification
+        uses: codedsolar/slack-action@v1.2.0
+        if: ${{ github.event_name != 'pull_request' && always() }}
+        with:
+          fields: |
+            {STATUS}
+            {REF}
+            Node.js: ${{ steps.node.outputs.node-version }}
+          status: ${{ job.status }}
+          timestamp: ${{ steps.slack.outputs.slack-timestamp }}
 
   test:
     runs-on: ubuntu-latest
