@@ -10,6 +10,8 @@ on:
       - develop
       - main
 
+permissions: read-all
+
 env:
   NODE_VERSION: 18
   SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
@@ -19,6 +21,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -60,6 +63,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -99,6 +103,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -133,7 +138,7 @@ jobs:
         id: test
         run: yarn test
       - name: Send Codecov report
-        if: ${{ !env.ACT }}
+        if: ${{ !env.ACT && github.event_name != 'pull_request' }}
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
