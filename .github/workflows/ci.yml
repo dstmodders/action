@@ -13,11 +13,8 @@ on:
 env:
   NODE_VERSION: 18
   SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
-  SLACK_COLOR_FAILURE: '#cc1f2d'
-  SLACK_COLOR_SUCCESS: '#24a943'
   SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
   SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
 jobs:
   build:
