@@ -132,7 +132,7 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v4
-      - name: Set up Node.js ${{ env.NODE_VERSION }}
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         id: node
         with:
@@ -146,6 +146,7 @@ jobs:
             {STATUS}
             {REF}
             Node.js: ${{ steps.node.outputs.node-version }}
+            Passed Jest tests: Testing...
           status: in-progress
       - name: Enable corepack
         run: corepack enable
@@ -153,9 +154,25 @@ jobs:
         run: yarn install --ignore-scripts
         env:
           NODE_ENV: development
-      - name: Test
-        id: test
-        run: yarn test
+      - name: Test using Jest
+        id: jest
+        run: yarn test:jest || true
+      - name: Output Jest results
+        id: jest-output
+        run: yarn ci:jest || true
+      - name: Check results
+        run: |
+          jest_passed="${{ steps.jest-output.outputs.passed }}"
+          jest_total="${{ steps.jest-output.outputs.total }}"
+
+          echo "Passed Jest tests: $jest_passed"
+          echo "Total Jest tests: $jest_total"
+
+          exit_code=1
+          if [ "$jest_passed" = "$jest_total" ]; then
+            exit_code=0
+          fi
+          exit "$exit_code"
       - name: Send Codecov report
         if: ${{ !env.ACT && github.event_name != 'pull_request' }}
         uses: codecov/codecov-action@v4
@@ -174,5 +191,6 @@ jobs:
             {STATUS}
             {REF}
             Node.js: ${{ steps.node.outputs.node-version }}
+            Passed Jest tests: ${{ steps.jest-output.outputs.passed || '-' }} / ${{ steps.jest-output.outputs.total || '-' }}
           status: ${{ job.status }}
           timestamp: ${{ steps.slack.outputs.slack-timestamp }}
