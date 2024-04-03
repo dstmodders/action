@@ -49,6 +49,8 @@
   "scripts": {
     "audit:fix": "yarn-audit-fix",
     "build": "tsc",
+    "ci:eslint": "eslint --ext='js,ts' --format='./.github/eslint-output.js' .",
+    "ci:prettier": "node ./.github/prettier-output.js",
     "deduplicate": "yarn-deduplicate && yarn install --ignore-scripts",
     "lint": "eslint --ext ts .; prettier --check .",
     "prepare": "npm run build",
