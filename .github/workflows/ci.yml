@@ -182,7 +182,7 @@ jobs:
         uses: paambaati/codeclimate-action@v5.0.0
         if: ${{ !env.ACT && github.event_name != 'pull_request' }}
         env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CODE_CLIMATE_TOKEN }}
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
       - name: Update Slack notification
         uses: codedsolar/slack-action@v1.2.0
         if: ${{ github.event_name != 'pull_request' && always() }}
