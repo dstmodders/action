@@ -1,9 +1,4 @@
-### Intellij ###
 .idea/
-
-### Node ###
 coverage/
-node_modules/
-
-### Project ###
 lib/
+node_modules/
