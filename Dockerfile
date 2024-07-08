@@ -2,6 +2,7 @@ FROM dstmodders/dst-mod:debian
 
 ENV NODE_ENV="production"
 
+USER root
 WORKDIR /opt/action/
 COPY . .
 RUN NODE_ENV="development" yarn install \
@@ -12,4 +13,5 @@ RUN NODE_ENV="development" yarn install \
     ./src/ \
     ./tsconfig.json
 
+USER dst-mod
 ENTRYPOINT ["node", "/opt/action/lib/index.js"]
