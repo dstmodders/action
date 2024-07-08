@@ -8,7 +8,7 @@ readme/
 
 .dockerignore
 .editorconfig
-.eslintrc
+.eslintrc.js
 .gitignore
 .prettierignore
 .prettierrc
