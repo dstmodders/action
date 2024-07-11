@@ -183,6 +183,8 @@ jobs:
         if: ${{ !env.ACT && github.event_name != 'pull_request' }}
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+        with:
+          coverageCommand: yarn test
       - name: Update Slack notification
         uses: codedsolar/slack-action@v1.2.0
         if: ${{ github.event_name != 'pull_request' && always() }}
